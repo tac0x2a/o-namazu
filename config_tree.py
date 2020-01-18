@@ -53,7 +53,3 @@ def create_config_tree_sub(dir_path: Path, conf_file_name: str, current_config: 
 def parse_config(file_path: Path) -> dict:
     with file_path.open() as f:
         return yaml.safe_load(f)
-
-
-config_tree = create_config_tree("sample")
-print(config_tree)
