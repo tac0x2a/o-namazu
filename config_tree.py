@@ -4,7 +4,25 @@ import yaml
 import os
 
 
-def create_config_tree(root_dir_path: str, conf_file: str = ".onamazu"):
+def create_config_tree(root_dir_path: str, conf_file: str = ".onamazu") -> dict:
+    """
+    Load config parameters each dirs.
+    Config file should be written in YAML format.
+
+    Usage:
+        config_tree = create_config_tree("./sample")
+        print(config_tree) # {'sample': {'pattern': '*.json'}, 'sample/hoge': {'pattern': '*.csv', 'piyo': 'piyo'},...
+
+    Arguments:
+        root_dir_path {str} -- Path to root dir.
+
+    Keyword Arguments:
+        conf_file {str} -- Name of config file. (default: {".onamazu"})
+
+    Returns:
+        dict -- Key: dir path, Value: dict of parameters.
+    """
+
     config_tree = {}
 
     create_config_tree_sub(Path(root_dir_path), conf_file, {}, config_tree)
