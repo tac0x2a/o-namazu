@@ -1,7 +1,4 @@
 
-
-# Config Tree - Structure
-
 from pathlib import Path
 import yaml
 import os
@@ -16,16 +13,14 @@ def create_config_tree(root_dir_path: str, conf_file: str = ".onamazu"):
 
 
 def create_config_tree_sub(dir_path: Path, conf_file_name: str, current_config: map, config_tree: map):
-
     if not Path.is_dir(dir_path):
         return config_tree
 
     conf_file_path = dir_path / conf_file_name
     if Path.exists(conf_file_path):
-        # Todo: actual load config file
         try:
             parsed = parse_config(conf_file_path)
-            current_config = dict(current_config, **parsed)
+            current_config = dict(current_config, **parsed)  # overwrite parent dir config by current dir config
             config_tree[str(dir_path)] = current_config
         except Exception as e:
             print(e)
