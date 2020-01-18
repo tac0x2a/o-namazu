@@ -30,7 +30,7 @@ def create_config_tree(root_dir_path: str, conf_file: str = ".onamazu") -> dict:
     return config_tree
 
 
-def create_config_tree_sub(dir_path: Path, conf_file_name: str, current_config: map, config_tree: map):
+def create_config_tree_sub(dir_path: Path, conf_file_name: str, current_config: dict, config_tree: dict) -> dict:
     if not Path.is_dir(dir_path):
         return config_tree
 
@@ -50,7 +50,7 @@ def create_config_tree_sub(dir_path: Path, conf_file_name: str, current_config: 
     return config_tree
 
 
-def parse_config(file_path: Path):
+def parse_config(file_path: Path) -> dict:
     with file_path.open() as f:
         return yaml.safe_load(f)
 
