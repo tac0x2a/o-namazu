@@ -43,3 +43,20 @@ def test_return_simple_dict():
     expected = {f'{ROOT_DIR}/piyo/01': {"hello": "onamazu"}}
     actual = config.create_config_map(ROOT_DIR)
     assert expected == actual
+
+
+def test_return_dict_overwrite_by_child_dir_configuration():
+    # ROOT_DIR {"a": "parent_a", "b": "parent_b"}
+    # |-child1 {"a": "child1_a"}
+    # |-empty/child2 {"b": "child2_b"}
+    place_config_file("", {"a": "parent_a", "b": "parent_b"})  # root configuration
+    place_config_file("child1", {"a": "child1_a"})
+    place_config_file("empty/child2", {"b": "child2_b"})
+
+    expected = {
+        f'{ROOT_DIR}': {"a": "parent_a", "b": "parent_b"},
+        f'{ROOT_DIR}/child1': {"a": "child1_a", "b": "parent_b"},
+        f'{ROOT_DIR}/empty/child2': {"a": "parent_a", "b": "child2_b"},
+    }
+    actual = config.create_config_map(ROOT_DIR)
+    assert expected == actual
