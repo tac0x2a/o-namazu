@@ -10,23 +10,17 @@ events = []
 
 
 def test_first():
-    ct.place_config_file("", {"pattern": "*.csv"})
-    time.sleep(1)
-
+    ct.place_config_file("sub", {"pattern": "*.csv"})
     conf = config.create_config_map(ct.ROOT_DIR)
-
     events = []
 
     w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
-
     w.start()
-    time.sleep(3)
-    ct.place_file("", f"sample.csv", "hello,world1")
-    print(events)
-    ct.place_file("", f"sample2.csv", "hello,world2")
     time.sleep(1)
-    print(events)
-    ct.place_file("", f"sample3.csv", "hello,world3")
+
+    ct.place_file("sub", f"sample.csv", "hello,world1")
+    time.sleep(1)
+
     w.stop()
     print(events)
 
