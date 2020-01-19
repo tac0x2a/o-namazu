@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
-import time
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
 # from onamazu
-import config as cfg
+from . import config as cfg
 
 
 class NamazuHandler(PatternMatchingEventHandler):
@@ -45,11 +44,10 @@ class NamazuWatcher():
         self.observer.stop()
         self.observer.join()
 
-
-watcher = NamazuWatcher("onamazu")
-try:
-    watcher.start()
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    watcher.stop()
+# watcher = NamazuWatcher("onamazu")
+# try:
+#     watcher.start()
+#     while True:
+#         time.sleep(1)
+# except KeyboardInterrupt:
+#     watcher.stop()
