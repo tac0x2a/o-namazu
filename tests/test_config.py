@@ -1,29 +1,34 @@
 #!/usr/bin/env python
 
-import pytest
 import contextlib
 import os
-from pathlib import Path
 import shutil
-import yaml
+from pathlib import Path
 
-# import functools
+import pytest
+import yaml
 
 from onamazu import config
 
-
+ROOT_DIR = 'onamazu_test'
 @pytest.fixture(scope='function', autouse=True)
 def scope_function():
-    root_dir = 'onamazu_test'
-    child_dirs = ['hoge', 'fuga', 'piyo/01']
-    for d in child_dirs:
-        Path(root_dir + "/" + d).mkdir(parents=True)
-
-    with open(root_dir + "/" + "piyo/01/.onamazu", 'w') as db:
-        yaml.dump({"hello": "onamazu"}, db)
-
+    create_dir("")
     yield
-    shutil.rmtree(root_dir)
+    shutil.rmtree(ROOT_DIR)
+
+
+def create_dir(dir_path):
+    path = Path(ROOT_DIR + "/" + dir_path)
+    if not path.exists():
+        path.mkdir(parents=True)
+
+
+def place_config_file(dir_path: str, yaml_body: dict, conf_file_name='.onamazu'):
+    create_dir(dir_path)
+    conf_file_path = "/".join([ROOT_DIR, dir_path, conf_file_name])
+    with open(conf_file_path, 'w') as db:
+        yaml.dump(yaml_body, db)
 
 
 def test_return_empty_dict():
@@ -33,6 +38,8 @@ def test_return_empty_dict():
 
 
 def test_return_simple_dict():
-    expected = {"onamazu_test/piyo/01": {"hello": "onamazu"}}
-    actual = config.create_config_map("onamazu_test")
+    place_config_file("piyo/01", {"hello": "onamazu"})
+
+    expected = {f'{ROOT_DIR}/piyo/01': {"hello": "onamazu"}}
+    actual = config.create_config_map(ROOT_DIR)
     assert expected == actual
