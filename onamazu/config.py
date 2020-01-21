@@ -1,7 +1,6 @@
 
 from pathlib import Path
 import yaml
-import os
 
 
 def create_config_map(root_dir_path: str, conf_file: str = ".onamazu") -> dict:
