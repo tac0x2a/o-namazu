@@ -10,6 +10,7 @@ from . import config as cfg
 
 class NamazuHandler(PatternMatchingEventHandler):
     def __init__(self, patterns, callback):
+        patterns = list(set(patterns))
         super(NamazuHandler, self).__init__(patterns=patterns)
         self.callback = callback
 
@@ -18,7 +19,6 @@ class NamazuHandler(PatternMatchingEventHandler):
 
     def on_created(self, event):
         print(f"on_created:{event.src_path}")
-        self.callback(event)
 
     def on_deleted(self, event):
         print(f"on_deleted:{event.src_path}")
@@ -44,6 +44,9 @@ class NamazuWatcher():
         self.observer = Observer()
         self.observer.schedule(event_handler, self.root_dir_path, recursive=True)
         self.observer.start()
+
+    def wait(self, n):
+        self.observer.join(n)
 
     def stop(self):
         self.observer.stop()

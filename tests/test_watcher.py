@@ -16,13 +16,11 @@ def test_first():
 
     w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
     w.start()
-    time.sleep(1)
 
     ct.place_file("sub", f"sample.csv", "hello,world1")
-    time.sleep(1)
+    w.wait(1)
 
     w.stop()
-    print(events)
 
     expected = 1
     actual = len(events)
