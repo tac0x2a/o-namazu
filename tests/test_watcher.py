@@ -1,6 +1,4 @@
 
-import time
-
 from onamazu import config
 from onamazu import watcher
 
@@ -46,5 +44,29 @@ def test_return_specified_pattern():
     w.stop()
 
     expected = [f"{ct.ROOT_DIR}/c/sample.csv", f"{ct.ROOT_DIR}/c/j/sample.json"]
+    actual = [e.src_path for e in events]
+    assert expected == actual
+
+
+def test_return_ignored_duplicated_events():
+    ct.place_config_file("", {"min_mod_interval": 10, "pattern": "*.csv"})  # root configuration
+    conf = config.create_config_map(ct.ROOT_DIR)
+
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+
+    ct.place_file("", f"hoge.csv", "hello,csv")
+    ct.place_file("", f"fuga.csv", "hello,csv")
+    ct.place_file("", f"hoge.csv", "hello,csv")  # should be ignore
+    ct.place_file("", f"fuga.csv", "hello,csv")  # should be ignore
+    ct.place_file("", f"hoge.csv", "hello,csv")  # should be ignore
+    w.wait(1)
+
+    w.stop()
+
+    expected = [
+        f"{ct.ROOT_DIR}/hoge.csv",
+        f"{ct.ROOT_DIR}/fuga.csv"
+    ]
     actual = [e.src_path for e in events]
     assert expected == actual

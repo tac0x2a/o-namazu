@@ -51,7 +51,7 @@ class NamazuHandler(PatternMatchingEventHandler):
 
         # Ignore duplicated modified
         if event.src_path in self.last_modified and \
-           time.time() - self.last_modified[event.src_path].created_at < 1:  # replace value by config
+           time.time() - self.last_modified[event.src_path].created_at < conf["min_mod_interval"]:  # replace value by config
             print(f"Ignore {event.src_path}")
             return  # ignore
 
