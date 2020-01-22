@@ -2,8 +2,15 @@
 from pathlib import Path
 import yaml
 
+DefaultConfig = {
+    # Minimum modification interval [sec].
+    # Modified events will be ignored if it inside of between previous modified and after "min_mod_interval" seconds.
+    # Default value is 1. It means all events will be ignored in term of 1 second since last modified.
+    "min_mod_interval": 1
+}
 
-def create_config_map(root_dir_path: str, conf_file: str = ".onamazu") -> dict:
+
+def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file: str = ".onamazu") -> dict:
     """
     Load config parameters each dirs.
     Config file should be written in YAML format.
@@ -22,9 +29,10 @@ def create_config_map(root_dir_path: str, conf_file: str = ".onamazu") -> dict:
         dict -- Key: dir path, Value: dict of parameters.
     """
 
+    # Default Values
     config_map = {}
 
-    create_config_map_sub(Path(root_dir_path), conf_file, {}, config_map)
+    create_config_map_sub(Path(root_dir_path), conf_file, default_conf, config_map)
 
     return config_map
 
