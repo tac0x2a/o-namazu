@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
+import fnmatch
 import time
 from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.events import PatternMatchingEventHandler
+from threading import Timer
 
-import fnmatch
+from watchdog.events import PatternMatchingEventHandler
+from watchdog.observers import Observer
 
 # from onamazu
 from . import config as cfg
@@ -59,7 +60,7 @@ class NamazuHandler(PatternMatchingEventHandler):
 
         if fnmatch.fnmatch(file_name, pattern):
             self.last_modified[event.src_path] = event
-            self.callback(event)
+            Timer(conf["callback_delay"], lambda: self.callback(event)).start()
 
 
 class NamazuWatcher():

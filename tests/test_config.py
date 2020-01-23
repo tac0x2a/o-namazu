@@ -39,7 +39,10 @@ def test_return_dict_overwrite_by_child_dir_configuration():
 def test_return_default_configs():
     ct.place_config_file("", {})  # root configuration
     expected = {
-        f'{ct.ROOT_DIR}': {"min_mod_interval": 1}
+        f'{ct.ROOT_DIR}': {
+            "min_mod_interval": 1,
+            "callback_delay": 0,
+        },
     }
     actual = config.create_config_map(ct.ROOT_DIR)
     assert expected == actual

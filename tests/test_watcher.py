@@ -4,8 +4,6 @@ from onamazu import watcher
 
 from . import conftest as ct
 
-events = []
-
 
 def test_return_create_notify():
     ct.place_config_file("sub", {"pattern": "*.csv"})
@@ -51,6 +49,7 @@ def test_return_specified_pattern():
 def test_return_ignored_duplicated_events():
     ct.place_config_file("", {"min_mod_interval": 10, "pattern": "*.csv"})  # root configuration
     conf = config.create_config_map(ct.ROOT_DIR)
+    events = []
 
     w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
     w.start()
@@ -70,3 +69,21 @@ def test_return_ignored_duplicated_events():
     ]
     actual = [e.src_path for e in events]
     assert expected == actual
+
+
+def test_return_delayed_events():
+    ct.place_config_file("", {"pattern": "*.csv", "callback_delay": 1})  # root configuration
+    conf = config.create_config_map(ct.ROOT_DIR)
+    events = []
+
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+    ct.place_file("", f"hoge.csv", "hello,csv")
+
+    w.wait(1)
+    assert 0 == len(events)
+
+    w.wait(1)
+    assert 1 == len(events)
+
+    w.stop()
