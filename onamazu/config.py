@@ -6,7 +6,9 @@ DefaultConfig = {
     # Minimum modification interval [sec].
     # Modified events will be ignored if it inside of between previous modified and after "min_mod_interval" seconds.
     # Default value is 1. It means all events will be ignored in term of 1 second since last modified.
-    "min_mod_interval": 1
+    "min_mod_interval": 1,
+
+    "callback_delay": 0,
 }
 
 
