@@ -60,7 +60,7 @@ class NamazuHandler(PatternMatchingEventHandler):
 
         if fnmatch.fnmatch(file_name, pattern):
             self.last_modified[event.src_path] = event
-            Timer(0, lambda: self.callback(event)).start()
+            Timer(conf["callback_delay"], lambda: self.callback(event)).start()
 
 
 class NamazuWatcher():
