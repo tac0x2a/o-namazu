@@ -45,6 +45,10 @@ class NamazuHandler(PatternMatchingEventHandler):
         src_path = Path(event.src_path)
         file_name = src_path.name
         parent = str(src_path.parent)
+        if parent not in self.config:
+            print("Ignore {event.src_path}")
+            return
+
         conf = self.config[parent]
 
         if 'pattern' not in conf:
@@ -59,8 +63,17 @@ class NamazuHandler(PatternMatchingEventHandler):
         pattern = conf['pattern']
 
         if fnmatch.fnmatch(file_name, pattern):
+            if event.src_path in self.last_modified:
+                print(f"Updated last modified {event}")
+
             self.last_modified[event.src_path] = event
-            Timer(conf["callback_delay"], lambda: self.callback(event)).start()
+            Timer(conf["callback_delay"], lambda: self.inject_callback(event)).start()
+
+    def inject_callback(self, event):
+        if self.last_modified[event.src_path] == event:
+            self.callback(event)
+        else:
+            print(f"Skipped {event}")
 
 
 class NamazuWatcher():
