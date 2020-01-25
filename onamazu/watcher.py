@@ -11,6 +11,9 @@ from watchdog.observers import Observer
 # from onamazu
 from . import config as cfg
 
+import logging
+logger = logging.getLogger("o-namazu")
+
 
 class NamazuEvent():
     def __init__(self, event):
@@ -28,52 +31,61 @@ class NamazuHandler(PatternMatchingEventHandler):
         self.last_modified = {}
 
     def on_moved(self, event):
-        print(f"on_moved:{event.src_path} -> {event.dest_path}")
+        logger.debug(f"on_moved:{event.src_path} -> { event.dest_path}")
 
     def on_created(self, event):
-        print(f"on_created:{event.src_path}")
-        # self.previouse_created = event
+        logger.debug(f"on_created:{event.src_path}")
 
     def on_deleted(self, event):
-        print(f"on_deleted:{event.src_path}")
+        logger.debug(f"on_deleted:{event.src_path}")
 
     def on_modified(self, event):
-        print(f"on_modified:{event.src_path}")
+        logger.debug(f"on_modified:{event.src_path}")
         self.judge(NamazuEvent(event))
 
     def judge(self, event):
-        src_path = Path(event.src_path)
+        src = event.src_path
+        src_path = Path(src)
         file_name = src_path.name
+
+        # Is observed directory?
         parent = str(src_path.parent)
         if parent not in self.config:
-            print("Ignore {event.src_path}")
+            logger.info("Ignore '{src}': Not observed directory '{parent}'")
             return
 
         conf = self.config[parent]
 
+        # Is observed file pattern?
         if 'pattern' not in conf:
+            logger.warn("Ignore '{src}': 'pattern' is not defined in '{parent}'/.onamazu")
             return
 
-        # Ignore duplicated modified
-        if event.src_path in self.last_modified and \
-           time.time() - self.last_modified[event.src_path].created_at < conf["min_mod_interval"]:  # replace value by config
-            print(f"Ignore {event.src_path}")
-            return  # ignore
-
         pattern = conf['pattern']
+        if not fnmatch.fnmatch(file_name, pattern):
+            logger.debug("Ignore '{src}': Is not matched observed file pattern('{pattern})")
+            return
 
-        if fnmatch.fnmatch(file_name, pattern):
-            if event.src_path in self.last_modified:
-                print(f"Updated last modified {event}")
+        # Is duplicated modified event?
+        if src in self.last_modified:
+            diff = event.created_at - self.last_modified[src].created_at
+            min_mod_interval = conf["min_mod_interval"]
+            if diff < min_mod_interval:  # replace value by config
+                logger.debug(f"Ignore '{src}': interval({diff}) is short than min_mod_interval({min_mod_interval})")
+                return
 
-            self.last_modified[event.src_path] = event
-            Timer(conf["callback_delay"], lambda: self.inject_callback(event)).start()
+        if src in self.last_modified:
+            logger.debug(f"Received new modified event '{src}' @ {event.created_at}")
+
+        self.last_modified[src] = event
+        Timer(conf["callback_delay"], lambda: self.inject_callback(event)).start()
 
     def inject_callback(self, event):
         if self.last_modified[event.src_path] == event:
             self.callback(event)
+            # Todo:  remove event from last_modified
         else:
-            print(f"Skipped {event}")
+            logger.debug(f"Skipped {event}")
 
 
 class NamazuWatcher():
@@ -85,8 +97,8 @@ class NamazuWatcher():
     def start(self):
         target_patterns = [v['pattern'] for k, v in self.config.items()]
 
-        print(f"{self.config}")
-        print(f'watching {target_patterns} in {self.root_dir_path}')
+        logger.debug(f"{self.config}")
+        logger.debug(f'watching {target_patterns} in {self.root_dir_path}')
 
         event_handler = NamazuHandler(target_patterns, self.config, self.callback)
         self.observer = Observer()

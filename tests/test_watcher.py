@@ -90,7 +90,7 @@ def test_return_delayed_events():
 
 
 def test_ignore_duplicated_events_in_callback_delay():
-    ct.place_config_file("", {"pattern": "*.csv", "callback_delay": 2})  # root configuration
+    ct.place_config_file("", {"pattern": "*.csv", "min_mod_interval": 0, "callback_delay": 2})  # root configuration
     conf = config.create_config_map(ct.ROOT_DIR)
     events = []
 
