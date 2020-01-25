@@ -48,6 +48,11 @@ class NamazuHandler(PatternMatchingEventHandler):
         src_path = Path(src)
         file_name = src_path.name
 
+        # Is it file?
+        if not src_path.is_file():
+            logger.info(f"Ignore '{src}': Is not a file")
+            return
+
         # Is observed directory?
         parent = str(src_path.parent)
         if parent not in self.config:
