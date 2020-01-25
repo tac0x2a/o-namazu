@@ -51,19 +51,19 @@ class NamazuHandler(PatternMatchingEventHandler):
         # Is observed directory?
         parent = str(src_path.parent)
         if parent not in self.config:
-            logger.info("Ignore '{src}': Not observed directory '{parent}'")
+            logger.info(f"Ignore '{src}': Not observed directory '{parent}'")
             return
 
         conf = self.config[parent]
 
         # Is observed file pattern?
         if 'pattern' not in conf:
-            logger.warn("Ignore '{src}': 'pattern' is not defined in '{parent}'/.onamazu")
+            logger.warn(f"Ignore '{src}': 'pattern' is not defined in '{parent}'/.onamazu")
             return
 
         pattern = conf['pattern']
         if not fnmatch.fnmatch(file_name, pattern):
-            logger.debug("Ignore '{src}': Is not matched observed file pattern('{pattern})")
+            logger.debug(f"Ignore '{src}': Is not matched observed file pattern('{pattern})")
             return
 
         # Is duplicated modified event?
