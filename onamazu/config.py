@@ -2,6 +2,10 @@
 from pathlib import Path
 import yaml
 
+import logging
+logger = logging.getLogger("o-namazu")
+
+
 DefaultConfig = {
     # Minimum modification interval [sec].
     # Modified events will be ignored if it inside of between previous modified and after "min_mod_interval" seconds.
@@ -54,7 +58,7 @@ def create_config_map_sub(dir_path: Path, conf_file_name: str, current_config: d
             current_config = dict(current_config, **parsed)  # overwrite parent dir config by current dir config
             config_map[str(dir_path)] = current_config
         except Exception as e:
-            print(e)
+            logger.error(e, exc_info=e)
 
     # Recursive load
     for d in [d for d in dir_path.iterdir() if d.is_dir()]:
