@@ -87,3 +87,45 @@ def test_return_delayed_events():
     assert 1 == len(events)
 
     w.stop()
+
+
+def test_ignore_duplicated_events_in_callback_delay():
+    ct.place_config_file("", {"pattern": "*.csv", "callback_delay": 2})  # root configuration
+    conf = config.create_config_map(ct.ROOT_DIR)
+    events = []
+
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+
+    ct.place_file("", f"hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
+    ct.place_file("", f"hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
+    ct.place_file("", f"hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
+    ct.place_file("", f"hoge.csv", "hello,csv"); w.wait(1)
+    w.wait(3)  # 1event
+
+    assert 1 == len(events)
+
+    w.stop()
+
+
+def test_ignore_duplicated_events_in_callback_delay_multi_dir():
+    ct.place_config_file("mario", {"pattern": "*.csv", "callback_delay": 2})
+    ct.place_config_file("luigi", {"pattern": "*.txt", "callback_delay": 1})
+    conf = config.create_config_map(ct.ROOT_DIR)
+    events = []
+
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+
+    ct.place_file("mario", f"hoge.csv", "hello,world")
+    ct.place_file("luigi", f"hoge.txt", "hello,world")
+    w.wait(3)  # 1event
+
+    w.stop()
+
+    expected = [
+        f"{ct.ROOT_DIR}/luigi/hoge.txt",
+        f"{ct.ROOT_DIR}/mario/hoge.csv",
+    ]
+    actual = [e.src_path for e in events]
+    assert expected == actual

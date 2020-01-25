@@ -8,9 +8,10 @@ DefaultConfig = {
     # Default value is 1. It means all events will be ignored in term of 1 second since last modified.
     "min_mod_interval": 1,
 
-    # Delay of callback from modification detected [sec].
-    # Often, the modification event will be thrown at started modification of the file.
-    # If you want to notify event after file modification completed,set `callback_delay` vlaue.
+    # Delay of callback from last modification detect [sec]
+    # Often, modification events are received several times in continuous writing the file.
+    # The event will be ignored that is received inside of between previous modified and after "callback_delay" seconds.
+    # After "callback_delay" seconds from received last modification event, the callback is ececution.
     "callback_delay": 0,
 }
 
