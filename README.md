@@ -3,6 +3,17 @@
 
 Oh Namazu (Catfish) in datalake
 
+# Setup
+```
+pip install -r requirements.txt
+```
+
+if you faced `No module named '_bz2'` error, please re install python environment.
+```
+sudo apt-get install liblzma-dev libbz2-dev
+pyenv install 3.7.3 # your python version
+```
+
 # Parameters of observing directory
 Parameter should be write YAML format as `.onamazu` file. It should be placed for each directories that be observed.
 

@@ -3,8 +3,8 @@
 import argparse
 import os
 import logging
-from onamazu import config
-from onamazu import watcher
+from onamazu import config, watcher, csv_inferencer
+
 
 from pathlib import Path
 
@@ -43,6 +43,7 @@ def sample(ev):
     logger.info(f"{ev.src_path}@{ev.created_at}")
     path = Path(ev.src_path)
     logger.info(f"{path.stat().st_size} bytes")
+    csv_inferencer.type_csv(ev.src_path)
 
 
 # -------------------------------------------------
