@@ -12,7 +12,7 @@ if you faced `No module named '_bz2'` error, please re install python environmen
 ```
 sudo apt-get install liblzma-dev libbz2-dev
 pyenv install 3.7.3 # your python version
-```
+ ```
 
 # Parameters of observing directory
 Parameter should be write YAML format as `.onamazu` file. It should be placed for each directories that be observed.
@@ -83,3 +83,27 @@ Delay of callback from last modification detect [sec]
 Often, modification events are received several times in continuous writing the file.
 The event will be ignored that is received inside of between previous modified and after `callback_delay` seconds.
 After "callback_delay" seconds from received last modification event, the callback is ececution.
+
+### `csv_mqtt` `[Dict]`
+**CAUTION**: This feature is **NOT** for production.
+
+If this parameter is defined, o-namazu try to parse file as csv with header, and sent to MQTT Broker as json lines.
+A sent message has single json line. So, it makes too large overhead. (Because **NOT** for production)
+
+
+**Example**
+```
+mqtt:
+  host: 192.168.11.200
+  port: 1883
+  topic: csv/sample
+```
+
+#### `host` `[String]`
+MQTT Broker host or IP address.
+
+#### `port` `[Numeric]`
+MQTT Broker port.
+
+#### `topic` `[String]`
+Topic of published mqtt message.

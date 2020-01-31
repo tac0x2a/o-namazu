@@ -1,1 +1,6 @@
 pattern: "*"
+
+csv_mqtt:
+  host: 192.168.11.200
+  port: 1883
+  topic: csv_sample
