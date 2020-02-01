@@ -16,10 +16,11 @@ logger = logging.getLogger("o-namazu")
 
 
 class NamazuEvent():
-    def __init__(self, event):
+    def __init__(self, event, config):
         self.event = event
         self.src_path = event.src_path
         self.created_at = time.time()
+        self.config = config
 
 
 class NamazuHandler(PatternMatchingEventHandler):
@@ -41,7 +42,7 @@ class NamazuHandler(PatternMatchingEventHandler):
 
     def on_modified(self, event):
         logger.debug(f"on_modified:{event.src_path}")
-        self.judge(NamazuEvent(event))
+        self.judge(event)
 
     def judge(self, event):
         src = event.src_path
@@ -60,6 +61,7 @@ class NamazuHandler(PatternMatchingEventHandler):
             return
 
         conf = self.config[parent]
+        event = NamazuEvent(event, conf)
 
         # Is observed file pattern?
         if 'pattern' not in conf:

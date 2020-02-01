@@ -3,8 +3,8 @@
 import argparse
 import os
 import logging
-from onamazu import config
-from onamazu import watcher
+from onamazu import config, watcher, csv_inferencer, mqtt_sender
+
 
 from pathlib import Path
 
@@ -43,6 +43,23 @@ def sample(ev):
     logger.info(f"{ev.src_path}@{ev.created_at}")
     path = Path(ev.src_path)
     logger.info(f"{path.stat().st_size} bytes")
+
+    if "csv_mqtt" in ev.config:
+        csv_inferencer.type_csv(ev.src_path)
+        json_lines = csv_inferencer.convert_json_list(ev.src_path)
+
+        mqtt_config = ev.config["csv_mqtt"]
+        host = mqtt_config["host"]
+        port = mqtt_config["port"]
+        topic = mqtt_config["topic"]
+
+        mqtt = mqtt_sender.MQTT_Sender()
+        mqtt.connect(host, port)
+        logger.info(f"CVS_MQTT Start ({len(json_lines)} messages will be sent)")
+        for line in json_lines:
+            mqtt.send(line, topic)
+            logger.debug(f"Sent: {line}")
+        logger.info(f"CVS_MQTT Done ({len(json_lines)} messages are sent)")
 
 
 # -------------------------------------------------
