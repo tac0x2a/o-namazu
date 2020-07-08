@@ -24,12 +24,12 @@ Parameters are inherited from parent directory.
 There are 2 directories under root directory. All directries has `.onamazu` file. (i.e. there are obseved).
 
 + `root_dir/.onamazu`
-  ```
+  ```yaml
   pattern: "*.csv"
   ```
 
   It effects follow:
-  ```
+  ```yaml
   pattern: "*.csv"
   min_mod_interval: 1
   ...
@@ -38,12 +38,12 @@ There are 2 directories under root directory. All directries has `.onamazu` file
   `min_mod_interval: 1` is one of the default values. It effects even if not write explicit.
 
 + `root_dir/mario/.onamazu`
-  ```
+  ```yaml
   pattern: "*.json"
   ```
 
   It effects follow:
-  ```
+  ```yaml
   pattern: "*.json"
   min_mod_interval: 1
   ...
@@ -53,12 +53,12 @@ There are 2 directories under root directory. All directries has `.onamazu` file
 
 
 + `root_dir/luigi/.onamazu`
-  ```
+  ```yaml
   min_mod_interval: 10
   ```
 
   It effects follow:
-  ```
+  ```yaml
   pattern: "*.csv"
   min_mod_interval: 10
   ...
@@ -68,23 +68,23 @@ There are 2 directories under root directory. All directries has `.onamazu` file
 
 
 ## Parameters
-### `pattern` `[String]`
+### `pattern: String`
 Pattern of filename. It should be arong unix shell file pattern. Please see [fnmatch document](https://docs.python.org/3/library/fnmatch.html)
 
-### `min_mod_interval` `[Numeric]`
+### `min_mod_interval: Numeric`
 Minimum modification interval [sec].
 Modified events will be ignored if it inside of between previous modified and after `min_mod_interval` seconds.
 
 Default value is 1. It means all events will be ignored in term of 1 second since last modified.
 
 
-### `callback_delay` `[Numeric]`
+### `callback_delay: Numeric`
 Delay of callback from last modification detect [sec]
 Often, modification events are received several times in continuous writing the file.
 The event will be ignored that is received inside of between previous modified and after `callback_delay` seconds.
 After "callback_delay" seconds from received last modification event, the callback is ececution.
 
-### `csv_mqtt` `[Dict]`
+### `csv_mqtt: Dict`
 **CAUTION**: This feature is **NOT** for production.
 
 If this parameter is defined, o-namazu try to parse file as csv with header, and sent to MQTT Broker as json lines.
@@ -92,18 +92,18 @@ A sent message has single json line. So, it makes too large overhead. (Because *
 
 
 **Example**
-```
+```yaml
 mqtt:
   host: 192.168.11.200
   port: 1883
   topic: csv/sample
 ```
 
-#### `host` `[String]`
+#### `host: String`
 MQTT Broker host or IP address.
 
-#### `port` `[Numeric]`
+#### `port: Numeric`
 MQTT Broker port.
 
-#### `topic` `[String]`
+#### `topic: String`
 Topic of published mqtt message.
