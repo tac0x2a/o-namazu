@@ -1,4 +1,4 @@
 PyYAML==5.1.2
 watchdog==0.10.3
-pandas==0.25.3
-
+pandas==1.0.5
+paho-mqtt==1.5.0

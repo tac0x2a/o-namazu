@@ -2,9 +2,9 @@ import pytest
 from pathlib import Path
 import shutil
 import yaml
+import csv
 
 ROOT_DIR = 'onamazu_test'
-
 
 @pytest.fixture(scope='function', autouse=True)
 def scope_function():
@@ -32,3 +32,14 @@ def place_file(dir_path: str, file_name: str, body: str):
     with open(file_path, 'w') as db:
         db.write(body)
     print(f"place file:{file_path}")
+
+
+def create_csv(dir_path: str, file_name: str, header: tuple, body: list) -> str:
+    create_dir(dir_path)
+    file_path = "/".join([ROOT_DIR, dir_path, file_name])
+    with open(file_path, 'w') as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        w.writerows(body)
+
+    return file_path
