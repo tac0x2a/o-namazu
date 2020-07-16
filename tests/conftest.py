@@ -34,12 +34,11 @@ def place_file(dir_path: str, file_name: str, body: str):
     print(f"place file:{file_path}")
 
 
-def create_csv(dir_path: str, file_name: str, header: tuple, body: list) -> str:
+def write_csv(dir_path: str, file_name: str, rows: list) -> str:
     create_dir(dir_path)
     file_path = "/".join([ROOT_DIR, dir_path, file_name])
-    with open(file_path, 'w') as f:
+    with open(file_path, 'a') as f:
         w = csv.writer(f)
-        w.writerow(header)
-        w.writerows(body)
+        w.writerows(rows)
 
     return file_path
