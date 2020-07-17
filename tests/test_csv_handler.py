@@ -35,7 +35,7 @@ def test_csv_tail_return_appended_data():
         1,2
         3,4
         """).lstrip()
-    (actual_head, pos_head) = ch.tail(file_path, 0, conf)
+    (actual_head, pos_head) = ch.read_tail(file_path, 0, conf)
     assert expected_head == actual_head
 
     # Append new lines
@@ -47,7 +47,7 @@ def test_csv_tail_return_appended_data():
         7,8
         9,10
         """).lstrip()
-    (actual_appended, pos_appended) = ch.tail(file_path, pos_head, conf)
+    (actual_appended, pos_appended) = ch.read_tail(file_path, pos_head, conf)
 
     assert expected_appended == actual_appended
 

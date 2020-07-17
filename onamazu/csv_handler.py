@@ -1,11 +1,11 @@
 
 
 def read_all(file_paht: str, conf) -> str:
-    with open(file_paht) as f:
-        return f.read()
+    (body, pos) = read_tail(file_paht, 0, conf)
+    return body
 
 
-def tail(file_paht: str, already_read_pos: int, conf) -> (str, int):
+def read_tail(file_paht: str, already_read_pos: int, conf) -> (str, int):
 
     with open(file_paht) as f:
         read_string = f.readline()  # header
