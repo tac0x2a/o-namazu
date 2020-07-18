@@ -121,3 +121,30 @@ def test_csv_read_return_appended_data_each_file():
         """).lstrip()
     actual_appended_b = ch.read(Path(file_path_b), conf)
     assert expected_appended_b == actual_appended_b
+
+
+def test_csv_read_return_appended_data_as_db_file():
+    ct.place_config_file("", {"pattern": "*.csv", "db_file": "o-namazu.csv"})
+    conf = config.create_config_map(ct.ROOT_DIR)[ct.ROOT_DIR]
+
+    file_path = ct.write_csv("", "test.csv", [("hello", "world"), (1, 2), (3, 4)])
+    expected_head = tw.dedent(
+        """
+        hello,world
+        1,2
+        3,4
+        """).lstrip()
+    actual_head = ch.read(Path(file_path), conf)
+    assert expected_head == actual_head
+
+    # Append new lines
+    file_path = ct.write_csv("", "test.csv", [(5, 6), (7, 8), (9, 10)])
+    expected_appended = tw.dedent(
+        """
+        hello,world
+        5,6
+        7,8
+        9,10
+        """).lstrip()
+    actual_appended = ch.read(Path(file_path), conf)
+    assert expected_appended == actual_appended

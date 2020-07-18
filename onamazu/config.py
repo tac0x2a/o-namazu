@@ -17,6 +17,10 @@ DefaultConfig = {
     # The event will be ignored that is received inside of between previous modified and after "callback_delay" seconds.
     # After "callback_delay" seconds from received last modification event, the callback is ececution.
     "callback_delay": 0,
+
+    # File name of status file of the directory.
+    # It contains current read position,last time of read, and so on.
+    "db_file": ".onamazu.db"
 }
 
 

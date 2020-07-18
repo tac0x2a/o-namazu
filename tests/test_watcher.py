@@ -129,3 +129,40 @@ def test_ignore_duplicated_events_in_callback_delay_multi_dir():
     ]
     actual = [e.src_path for e in events]
     assert expected == actual
+
+
+def test_ignore_db_file():
+    ct.place_config_file("c", {"pattern": "*"})
+    ct.place_config_file("c/j", {"pattern": "*", "db_file": "cache-file.yml"})
+
+    conf = config.create_config_map(ct.ROOT_DIR)
+    events = []
+
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+
+    ct.place_file("c", "hoge.csv", "hoge")
+    ct.place_file("c/j", "hoge.csv", "hoge")
+    w.wait(1)
+
+    w.stop()
+
+    expected = [f"{ct.ROOT_DIR}/c/hoge.csv", f"{ct.ROOT_DIR}/c/j/hoge.csv"]
+    actual = [e.src_path for e in events]
+    assert expected == actual
+
+
+def test_create_db_file_when_receive_file_event():
+    ct.place_config_file("", {"pattern": "*"})
+    conf = config.create_config_map(ct.ROOT_DIR)
+
+    events = []
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+    ct.place_file("", "sample-file.csv", "hoge")
+    w.wait(1)
+    w.stop()
+
+    db = ct.read_db_file(ct.ROOT_DIR)
+    keys = db["watching"].keys()
+    assert "sample-file.csv" in keys

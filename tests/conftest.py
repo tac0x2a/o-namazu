@@ -4,6 +4,8 @@ import shutil
 import yaml
 import csv
 
+from onamazu import config
+
 ROOT_DIR = 'onamazu_test'
 
 
@@ -43,3 +45,9 @@ def write_csv(dir_path: str, file_name: str, rows: list) -> str:
         w.writerows(rows)
 
     return file_path
+
+
+def read_db_file(dir_path: str, db_file_name=config.DefaultConfig['db_file']):
+    file_path = Path(dir_path) / db_file_name
+    with file_path.open() as f:
+        return yaml.safe_load(f)

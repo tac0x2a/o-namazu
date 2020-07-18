@@ -42,10 +42,21 @@ The event will be ignored that is received inside of between previous modified a
 After "callback_delay" seconds from received last modification event, the callback is ececution.
 
 
+## `db_file: String`
+File name of status file of the directory.
+It contains current read position,last time of read, and so on.
+
+In default, db_file contains following.
++ `watching: Dict` is map of file name to status of the file. The status contains following in default.
+  +  `last_modified: Numeric` is time of last modified the file as epoch time.
+
+
 ## `csv.mqtt: Dict`
 If this parameter is defined, o-namazu try to parse file as csv with header, and sent to MQTT Broker.
 When put a csv file into directory, o-namazu read all data and will send to MQTT Broker.
 After that, if some rows append to the file, o-namazu will send header and appended rows only.
+
+`csv.mqtt` will write last read position at db_file as `read_completed_pos: Numeric` into each file entry under `watching` dict.
 
 
 **Example**
