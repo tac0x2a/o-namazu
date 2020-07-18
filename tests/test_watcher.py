@@ -72,7 +72,7 @@ def test_return_ignored_duplicated_events():
 
 
 def test_return_delayed_events():
-    ct.place_config_file("", {"pattern": "*.csv", "callback_delay": 1})  # root configuration
+    ct.place_config_file("", {"pattern": "*.csv", "callback_delay": 2})  # root configuration
     conf = config.create_config_map(ct.ROOT_DIR)
     events = []
 
@@ -83,7 +83,7 @@ def test_return_delayed_events():
     w.wait(1)
     assert 0 == len(events)
 
-    w.wait(1)
+    w.wait(2)
     assert 1 == len(events)
 
     w.stop()

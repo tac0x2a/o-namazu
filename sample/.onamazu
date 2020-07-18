@@ -1,6 +1,6 @@
-pattern: "*"
+pattern: "*.csv"
 
-csv_mqtt:
-  host: 192.168.11.200
+csv.mqtt:
+  host: localhost
   port: 1883
-  topic: csv_sample
+  topic: onamazu/csv/sample

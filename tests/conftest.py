@@ -2,6 +2,7 @@ import pytest
 from pathlib import Path
 import shutil
 import yaml
+import csv
 
 ROOT_DIR = 'onamazu_test'
 
@@ -32,3 +33,13 @@ def place_file(dir_path: str, file_name: str, body: str):
     with open(file_path, 'w') as db:
         db.write(body)
     print(f"place file:{file_path}")
+
+
+def write_csv(dir_path: str, file_name: str, rows: list) -> str:
+    create_dir(dir_path)
+    file_path = "/".join([ROOT_DIR, dir_path, file_name])
+    with open(file_path, 'a') as f:
+        w = csv.writer(f)
+        w.writerows(rows)
+
+    return file_path
