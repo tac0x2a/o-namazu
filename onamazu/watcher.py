@@ -118,13 +118,3 @@ class NamazuWatcher():
     def stop(self):
         self.observer.stop()
         self.observer.join()
-
-
-# conf = cfg.create_config_map("sample")
-# watcher = NamazuWatcher("sample", conf, lambda ev: print(f"callback! : {ev}"))
-# try:
-#     watcher.start()
-#     while True:
-#         time.sleep(1)
-# except KeyboardInterrupt:
-#     watcher.stop()
