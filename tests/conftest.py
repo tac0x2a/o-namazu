@@ -6,6 +6,7 @@ import csv
 
 ROOT_DIR = 'onamazu_test'
 
+
 @pytest.fixture(scope='function', autouse=True)
 def scope_function():
     create_dir("")
