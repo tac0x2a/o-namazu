@@ -2,6 +2,7 @@
 
 import fnmatch
 import time
+import os
 from pathlib import Path
 from threading import Timer
 
@@ -9,7 +10,8 @@ from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 # from onamazu
-from . import config as cfg
+from onamazu import config as cfg
+from onamazu import db_file_operator as dfo
 
 import logging
 logger = logging.getLogger("o-namazu")
@@ -73,6 +75,12 @@ class NamazuHandler(PatternMatchingEventHandler):
             logger.debug(f"Ignore '{src}': Is not matched observed file pattern('{pattern})")
             return
 
+        # Is o-namazu created DB file ?
+        db_file = conf['db_file']
+        if db_file == file_name:
+            logger.debug(f"Ignore '{src}': db_file will be ignored('{db_file})")
+            return
+
         # Is duplicated modified event?
         if src in self.last_modified:
             diff = event.created_at - self.last_modified[src].created_at
@@ -89,10 +97,18 @@ class NamazuHandler(PatternMatchingEventHandler):
 
     def inject_callback(self, event):
         if self.last_modified[event.src_path] == event:
+            dfo.update_watching_file(Path(event.src_path), event.config, self._update_last_modified, event)
             self.callback(event)
-            # Todo:  remove event from last_modified
+            # Todo: Need to remove entry last_modified[event.src_path]. But it is required for detecting duplicated events. It looks good the time to remove, when sweeping is implemented.
+
         else:
             logger.debug(f"Skipped {event}")
+
+    def _update_last_modified(self, file_path, config, file_db, event):
+
+        modTimesinceEpoc = os.path.getmtime(file_path)
+        file_db["last_modified"] = modTimesinceEpoc
+        return None
 
 
 class NamazuWatcher():
@@ -118,13 +134,3 @@ class NamazuWatcher():
     def stop(self):
         self.observer.stop()
         self.observer.join()
-
-
-# conf = cfg.create_config_map("sample")
-# watcher = NamazuWatcher("sample", conf, lambda ev: print(f"callback! : {ev}"))
-# try:
-#     watcher.start()
-#     while True:
-#         time.sleep(1)
-# except KeyboardInterrupt:
-#     watcher.stop()
