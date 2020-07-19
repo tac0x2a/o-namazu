@@ -1,8 +1,9 @@
 pattern: "*.csv"
 
+ttl: 1
+
 mqtt:
   host: localhost
   port: 1883
   topic: onamazu/csv/sample
   format: csv
-

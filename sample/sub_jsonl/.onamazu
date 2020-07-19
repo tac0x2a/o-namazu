@@ -6,3 +6,6 @@ mqtt:
   topic: onamazu/json/sample
   format: text
 
+archive:
+  type: zip
+  name: archived_jsonl.zip

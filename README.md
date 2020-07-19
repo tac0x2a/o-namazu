@@ -55,6 +55,25 @@ In default, db_file contains following.
   +  `last_modified: Numeric` is time of last modified the file as epoch time.
 
 
+## `ttl: Numeric`
+Time to archive the file [sec]
+When expired ttl seconds since last detected at by o-namazu, the file will be moved into archive directory.
+o-namazu will traverse directories each minutes to judge the file should be archived or not.
+If the value is -1, the file is never archive. (Default)
+
+## `archive: Dict`
+Destination of ttl expired files [Dict]
+
+### `type: String`
+Archive action type be applied to the file that expired ttl. `type` have to be `directory`, `zip` or `delete`.
++ `directory`: move the file into directory.
++ `zip`: compress the file into zip file.
++ `delete`: delete the file.
+
+### `name: String`
+`name` is name of directory or zip as the destination. This is ignored when use "delete" type
+
+
 ## `mqtt: Dict`
 If this parameter is defined, o-namazu try to read as ascii data, and sent to MQTT Broker.
 when put a file into directory, o-namazu read all data and will send. If some rows append to the file, o-namazu will send appended rows only.
