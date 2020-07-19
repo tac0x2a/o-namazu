@@ -4,6 +4,7 @@ import argparse
 import os
 import logging
 from onamazu import config, watcher, csv_handler, mqtt_sender
+from onamazu import text_handler
 
 
 from pathlib import Path
@@ -44,19 +45,32 @@ def sample_handler(ev):
     path = Path(ev.src_path)
     logger.info(f"{path.stat().st_size} bytes")
 
-    if "csv.mqtt" in ev.config:
-        mqtt_config = ev.config["csv.mqtt"]
+    if "mqtt" in ev.config:
+        mqtt_config = ev.config["mqtt"]
         host = mqtt_config["host"]
         port = mqtt_config["port"]
         topic = mqtt_config["topic"]
+        format = mqtt_config["format"]
 
         mqtt = mqtt_sender.MQTT_Sender()
         mqtt.connect(host, port)
 
-        payload = csv_handler.read(path, ev.config)
+        if format == "csv":
+            payload = csv_handler.read(path, ev.config)
+        elif format == "text":
+            payload = text_handler.read(path, ev.config)
+        else:
+            logger.error(f"Unsupported format `{format}`, `{path}` has not sent.")
+            return
 
-        logger.info(f"CVS_MQTT Start ({len(payload)} messages will be sent)")
+        if len(payload) <= 0:
+            logger.info(f"Payload is empty. `{path}` was not sent")
+            return
+
+        line_count = len(payload.strip().split("\n"))
+        logger.info(f"MQTT send Start `{path}` as `{format}` ({len(payload)} bytes, {line_count} lines) will be sent")
         mqtt.send(payload, topic)
+        logger.info(f"MQTT send Done `{path}`")
 
 
 # -------------------------------------------------

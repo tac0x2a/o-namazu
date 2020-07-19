@@ -32,9 +32,10 @@ def place_config_file(dir_path: str, yaml_body: dict, conf_file_name='.onamazu')
 def place_file(dir_path: str, file_name: str, body: str):
     create_dir(dir_path)
     file_path = "/".join([ROOT_DIR, dir_path, file_name])
-    with open(file_path, 'w') as db:
+    with open(file_path, 'a') as db:
         db.write(body)
     print(f"place file:{file_path}")
+    return file_path
 
 
 def write_csv(dir_path: str, file_name: str, rows: list) -> str:
