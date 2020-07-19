@@ -20,7 +20,21 @@ DefaultConfig = {
 
     # File name of status file of the directory.
     # It contains current read position,last time of read, and so on.
-    "db_file": ".onamazu.db"
+    "db_file": ".onamazu.db",
+
+    # Time to archive the file [sec]
+    # When expired ttl seconds since last detected at by o-namazu, the file will be moved into archive directory.
+    # o-namazu will traverse directories each `archive_interval` seconds to judge the file should be archived or not.
+    # If the value is -1, the file is never archive. (Default)
+    "ttl": -1,
+
+    # Destination of ttl expired files [Dict]
+    # "type" is "directory", "zip" or "delete"
+    # "name" is name of directory or zip as the destination. This is ignored when use "delete" type
+    "archive": {
+        "type": "directory",
+        "name": "_archive"
+    }
 }
 
 

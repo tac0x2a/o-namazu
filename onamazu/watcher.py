@@ -2,7 +2,9 @@
 
 import fnmatch
 import time
-import os
+import datetime
+from datetime import timezone, datetime
+
 from pathlib import Path
 from threading import Timer
 
@@ -97,17 +99,16 @@ class NamazuHandler(PatternMatchingEventHandler):
 
     def inject_callback(self, event):
         if self.last_modified[event.src_path] == event:
-            dfo.update_watching_file(Path(event.src_path), event.config, self._update_last_modified, event)
+            dfo.update_watching_file(Path(event.src_path), event.config, self._update_last_detected, event)
             self.callback(event)
             # Todo: Need to remove entry last_modified[event.src_path]. But it is required for detecting duplicated events. It looks good the time to remove, when sweeping is implemented.
 
         else:
             logger.debug(f"Skipped {event}")
 
-    def _update_last_modified(self, file_path, config, file_db, event):
-
-        modTimesinceEpoc = os.path.getmtime(file_path)
-        file_db["last_modified"] = modTimesinceEpoc
+    def _update_last_detected(self, file_path, config, file_db, event):
+        modTimesinceEpoc = datetime.now().timestamp()
+        file_db["last_detected"] = modTimesinceEpoc
         return None
 
 
