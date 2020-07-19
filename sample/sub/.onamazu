@@ -1,0 +1,8 @@
+pattern: "*.jsonl"
+
+mqtt:
+  host: localhost
+  port: 1883
+  topic: onamazu/json/sample
+  format: text
+

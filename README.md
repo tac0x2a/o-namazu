@@ -8,7 +8,11 @@ o-namazu is data collector that traverse specified directories.
 You can be target of traverse just place `.onamazu` file.
 
 ### Supported format and protocol
-+ `csv.mqtt` : CSV(with header) to MQTT send
++ `csv` and multi-line `text`.
++ Send via `mqtt` protocol.
+
+Please see `mqtt: Dict` parameter.
+
 
 # Setup
 ```
@@ -51,20 +55,19 @@ In default, db_file contains following.
   +  `last_modified: Numeric` is time of last modified the file as epoch time.
 
 
-## `csv.mqtt: Dict`
-If this parameter is defined, o-namazu try to parse file as csv with header, and sent to MQTT Broker.
-When put a csv file into directory, o-namazu read all data and will send to MQTT Broker.
-After that, if some rows append to the file, o-namazu will send header and appended rows only.
+## `mqtt: Dict`
+If this parameter is defined, o-namazu try to read as ascii data, and sent to MQTT Broker.
+when put a file into directory, o-namazu read all data and will send. If some rows append to the file, o-namazu will send appended rows only.
 
-`csv.mqtt` will write last read position at db_file as `read_completed_pos: Numeric` into each file entry under `watching` dict.
-
+`mqtt` will write last read position at db_file as `read_completed_pos: Numeric` into each file entry under `watching` dict.
 
 **Example**
 ```yaml
-csv.mqtt:
-  host: 192.168.11.200
+mqtt:
+  host: localhost
   port: 1883
   topic: csv/sample
+  format: csv
 ```
 
 ### `host: String`
@@ -75,6 +78,11 @@ MQTT Broker port.
 
 ### `topic: String`
 Topic of published mqtt message.
+
+### `format: String`
+The file format `csv` or `text`.
+If use `csv`, when some rows append to the file, o-namazu will send header and appended rows only. When use `text`, just will send appended lines.
+Default value is `text`.
 
 
 # Parameter inheritance of effects on observing directory
