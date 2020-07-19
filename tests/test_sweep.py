@@ -156,14 +156,13 @@ def test_sweep_scheduled_sweep():
 
     file_path_old = ct.write_csv("", "test_old.csv", [("hello", "world"), (1, 2), (3, 4)])
     schedule.run_pending()
-    w.wait(1)
+    w.wait(2)
 
     file_path_new = ct.write_csv("", "test_new.csv", [("hello", "world"), (1, 2), (3, 4)])
     schedule.run_pending()
     w.wait(1)
 
     schedule.run_pending()
-    w.wait(1)
 
     w.stop()
 

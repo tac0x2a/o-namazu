@@ -1,0 +1,17 @@
+version: "3"
+services:
+  onamazu:
+    build: .
+    # environment:
+      # - LOG_FILE_COUNT=1000    # Count of file files kept
+      # - LOG_FILE_SIZE=1000000 # Size of each log file(KB)
+      # - MQ_POST=5672 # RabbitMQ port
+      # - DB_PORT=9000 # Clickhouse port by native connection
+      # - LOG_LEVEL=INFO # Log level [DEBUG, INFO, WARN, ERROR]
+      # - LOG_FORMAT='[%(levelname)s] %(asctime)s | %(pathname)s(L%(lineno)s) | %(message)s'  #  Log format by 'logging' package
+      # - LOG_FILE=/logs/greabe.log # Log file name
+      # - RETRY_MAX_COUNT=3 # Max count of retry to processing.
+    volumes:
+      - ./volume/logs:/logs
+      #- ./onamazu_target:/data
+      - ./sample:/data
