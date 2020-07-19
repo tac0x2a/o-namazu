@@ -1,0 +1,12 @@
+pattern: "*.csv"
+
+mqtt:
+  host: localhost
+  port: 1883
+  topic: onamazu/csv/sub
+  format: text
+
+archive:
+  type: delete
+
+ttl: 90

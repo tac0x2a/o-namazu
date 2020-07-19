@@ -12,15 +12,19 @@ import zipfile
 logger = logging.getLogger("o-namazu")
 
 
-def sweep(config, now: datetime = datetime.now(timezone.utc)):
+def sweep(config, now: datetime = None):
+    if now is None:
+        now = datetime.now(timezone.utc)
+    logger.debug(f"Sweeep started. config:{config}, now:{now}")
     dfo.update_all_db_files(config, _sweep_callback, {"now": now})
 
 
 def _sweep_callback(dbs: dict, config_all: dict, obj: dict):
     now = obj['now']
-    for dir, dir_config in config_all.items():
+    for dir, dir_db in dbs.items():
+        dir_config = config_all[dir]
         dir_path = Path(dir)
-        dir_db = dbs[dir]
+
         expired_file_list = _sweep_directory_list_target(dir_path, dir_db, dir_config, now)
         _sweep_directory_files(dir_path, expired_file_list, dir_db, dir_config)
 
@@ -33,6 +37,10 @@ def _sweep_directory_list_target(dir_path: Path, dir_db: dict, dir_config: dict,
     ttl = dir_config["ttl"]
     if ttl <= 0:  # 0 is soon, -1 is never archive.
         return []
+
+    for f, l_timestamp in last_detected_list.items():
+        diff = now_timestamp - l_timestamp
+        logger.debug(f"Sweep test: {dir_path / f}: {l_timestamp}. diff = {diff}, ttl = {ttl}")
 
     return [Path(f) for f, l_timestamp in last_detected_list.items() if now_timestamp - l_timestamp >= ttl]
 

@@ -39,15 +39,18 @@ def update_all_db_files(conf_all: dict, proc, obj={}):
     """
     proc: proc(dbs: {dir_path_str: db Dict})
     """
+
     with _Lock:
         db_file_paths = [Path(dir) / conf["db_file"] for (dir, conf) in conf_all.items()]
+        db_file_paths = [db_file_path for db_file_path in db_file_paths if db_file_path.exists()]
+
         dbs = {str(db_file_path.parent): _load_db(db_file_path) for db_file_path in db_file_paths}
 
         proc(dbs, conf_all, obj)
 
-        for dir_str, conf in conf_all.items():
+        for dir_str, db in dbs.items():
+            conf = conf_all[dir_str]
             db_file_path = Path(dir_str) / conf["db_file"]
-            db = dbs[str(db_file_path.parent)]
             _store_db(Path(db_file_path), db)
 
 

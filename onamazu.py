@@ -3,9 +3,8 @@
 import argparse
 import os
 import logging
-from onamazu import config, watcher, csv_handler, mqtt_sender
-from onamazu import text_handler
-
+import schedule
+from onamazu import config, watcher, csv_handler, text_handler, mqtt_sender, sweeper
 
 from pathlib import Path
 
@@ -74,6 +73,8 @@ def sample_handler(ev):
 
 
 # -------------------------------------------------
+
+
 config_map = config.create_config_map(Directory)
 logger.info(f'config_map={config_map}')
 
@@ -83,10 +84,13 @@ for path, json in config_map.items():
 w = watcher.NamazuWatcher(Directory, config_map, sample_handler)
 w.start()
 
+schedule.every(1).minutes.do(lambda: sweeper.sweep(config_map))
+
 logger.info(f"Observe started '{Directory}'")
 logger.info(f"Press 'Ctrl-c' to exit")
 try:
     while True:
         w.wait(1)
+        schedule.run_pending()
 except KeyboardInterrupt:
     w.stop()

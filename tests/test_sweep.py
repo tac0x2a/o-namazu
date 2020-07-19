@@ -1,6 +1,8 @@
 
 from datetime import datetime, timezone, timedelta
 import zipfile
+import schedule
+
 from pathlib import Path
 
 from onamazu import config
@@ -141,4 +143,38 @@ def test_sweep_directory():
     assert Path(file_path_new).name in dir_db["watching"].keys()
     assert Path(file_path_old).name not in dir_db["watching"].keys()
 
+
+def test_sweep_scheduled_sweep():
+    ct.place_config_file("", {"pattern": "*", "ttl": 2})
+    conf = config.create_config_map(ct.ROOT_DIR)
+
+    schedule.every(1).seconds.do(lambda: sweeper.sweep(conf))
+
+    events = []
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+
+    file_path_old = ct.write_csv("", "test_old.csv", [("hello", "world"), (1, 2), (3, 4)])
+    schedule.run_pending()
+    w.wait(1)
+
+    file_path_new = ct.write_csv("", "test_new.csv", [("hello", "world"), (1, 2), (3, 4)])
+    schedule.run_pending()
+    w.wait(1)
+
+    schedule.run_pending()
+    w.wait(1)
+
+    w.stop()
+
+    dir_db = ct.read_db_file(ct.ROOT_DIR)
+    dir_conf = conf[ct.ROOT_DIR]
+
+    assert not Path(file_path_old).exists()
+    assert (Path(ct.ROOT_DIR) / dir_conf["archive"]["name"] / Path(file_path_old).name).exists()
+    assert Path(file_path_new).exists()
+
+    dir_db = ct.read_db_file(ct.ROOT_DIR)
+    assert Path(file_path_new).name in dir_db["watching"].keys()
+    assert Path(file_path_old).name not in dir_db["watching"].keys()
 

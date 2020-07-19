@@ -24,7 +24,7 @@ DefaultConfig = {
 
     # Time to archive the file [sec]
     # When expired ttl seconds since last detected at by o-namazu, the file will be moved into archive directory.
-    # o-namazu will traverse directories each `archive_interval` seconds to judge the file should be archived or not.
+    # o-namazu will traverse directories each minutes to judge the file should be archived or not.
     # If the value is -1, the file is never archive. (Default)
     "ttl": -1,
 
