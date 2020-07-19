@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
-import os
 import logging
-import schedule
-from onamazu import config, watcher, csv_handler, text_handler, mqtt_sender, sweeper
-
+import logging.handlers
+import os
+import sys
 from pathlib import Path
+
+import schedule
+from onamazu import (config, csv_handler, mqtt_sender, sweeper, text_handler, watcher)
 
 # -------------------------------------------------
 # Argument Parsing
@@ -78,6 +80,10 @@ def sample_handler(ev):
 
 config_map = config.create_config_map(Directory)
 logger.info(f'config_map={config_map}')
+
+if len(config_map) == 0:
+    logger.error("No config file found. Please see README.md")
+    sys.exit()
 
 for path, json in config_map.items():
     logger.info(f'Watching: {path}/{json["pattern"]}')
