@@ -12,6 +12,7 @@ from pathlib import Path
 # Argument Parsing
 parser = argparse.ArgumentParser(description='Observe file modification recursively, and callback')
 parser.add_argument('observe_directory', help='Target to observe directory')  # Required
+parser.add_argument('--archive_interval', help='Traverse interval seconds to judge the file should be archive [sec]', default=60)
 
 parser.add_argument('--log-level', help='Log level', choices=['DEBUG', 'INFO', 'WARN', 'ERROR'], default='INFO')
 parser.add_argument('--log-format', help='Log format by \'logging\' package', default='[%(levelname)s] %(asctime)s | %(pathname)s(L%(lineno)s) | %(message)s')  # Optional
@@ -84,7 +85,8 @@ for path, json in config_map.items():
 w = watcher.NamazuWatcher(Directory, config_map, sample_handler)
 w.start()
 
-schedule.every(1).minutes.do(lambda: sweeper.sweep(config_map))
+sweep_interval = int(args.archive_interval)
+schedule.every(sweep_interval).seconds.do(lambda: sweeper.sweep(config_map))
 
 logger.info(f"Observe started '{Directory}'")
 logger.info(f"Press 'Ctrl-c' to exit")

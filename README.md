@@ -58,7 +58,8 @@ In default, db_file contains following.
 ## `ttl: Numeric`
 Time to archive the file [sec]
 When expired ttl seconds since last detected at by o-namazu, the file will be moved into archive directory.
-o-namazu will traverse directories each minutes to judge the file should be archived or not.
+o-namazu will traverse directories every 60 seconds to judge the file should be archived or not. This intarval can be changed to change `--arcive_interval` command line argument.
+
 If the value is -1, the file is never archive. (Default)
 
 ## `archive: Dict`
