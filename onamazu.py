@@ -13,6 +13,8 @@ import schedule
 from onamazu import (config, csv_handler, mqtt_sender, sweeper, text_handler, watcher)
 
 # -------------------------------------------------
+
+# -------------------------------------------------
 # Argument Parsing
 parser = argparse.ArgumentParser(description='Observe file modification recursively, and callback')
 parser.add_argument('observe_directory', help='Target to observe directory')  # Required
@@ -42,6 +44,14 @@ if args.log_file:
 
 logger = logging.getLogger("o-namazu")
 logger.info(args)
+
+# Be quiet schedule-lib !!
+ScheduleLogLevel = "WARN"
+if args.log_level == "DEBUG":
+    ScheduleLogLevel = "DEBUG"
+logging.getLogger('schedule').setLevel(ScheduleLogLevel)
+logger.info(f"Change 'schedule-lib' log level to {ScheduleLogLevel}")
+# logging.getLogger('schedule').propagate = False
 
 # -------------------------------------------------
 
