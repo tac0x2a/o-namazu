@@ -3,7 +3,7 @@ pattern: "*.csv"
 ttl: 1
 
 mqtt:
-  host: localhost
+  host: 192.168.11.200
   port: 1883
-  topic: onamazu/csv/sample
+  topic: onamazu/develop/csv/count_test
   format: csv
