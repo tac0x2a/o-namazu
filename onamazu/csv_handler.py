@@ -65,3 +65,33 @@ def _read_tail(file_path: Path, already_read_pos: int, conf: dict) -> (str, int)
         read_string += f.read()
 
         return (read_string, f.tell())
+
+
+def split(csv_string: str, length: int) -> []:
+    if len(csv_string) <= length:
+        return [csv_string]
+
+    lines = csv_string.splitlines()
+    if len(lines) <= 2:
+        return [csv_string]
+
+    head = lines.pop(0)
+    result = []
+
+    tmp_joined = head + '\n' + lines.pop(0) + '\n'
+    tmp_length = len(tmp_joined)
+
+    for line in lines:
+        ln = line + '\n'
+
+        if tmp_length + len(ln) > length:
+            result.append(tmp_joined)
+            tmp_joined = head + '\n'
+            tmp_length = len(tmp_joined)
+
+        tmp_joined += ln
+        tmp_length += len(ln)
+
+    result.append(tmp_joined)
+
+    return result
