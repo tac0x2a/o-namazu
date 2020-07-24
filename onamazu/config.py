@@ -20,7 +20,7 @@ DefaultConfig = {
 
     # File name of status file of the directory.
     # It contains current read position,last time of read, and so on.
-    "db_file": ".onamazu.db",
+    "db_file": "onamazu.db",
 
     # Time to archive the file [sec]
     # When expired ttl seconds since last detected at by o-namazu, the file will be moved into archive directory.
@@ -58,7 +58,7 @@ DefaultConfig_MQTT = {
 }
 
 
-def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file: str = ".onamazu") -> dict:
+def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file: str = "onamazu.conf") -> dict:
     """
     Load config parameters each dirs.
     Config file should be written in YAML format.
@@ -71,7 +71,7 @@ def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file:
         root_dir_path {str} -- Path to root dir.
 
     Keyword Arguments:
-        conf_file {str} -- Name of config file. (default: {".onamazu"})
+        conf_file {str} -- Name of config file. (default: {"onamazu.conf"})
 
     Returns:
         dict -- Key: dir path, Value: dict of parameters.

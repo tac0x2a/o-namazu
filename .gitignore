@@ -107,4 +107,4 @@ venv.bak/
 .vscode
 
 # onamazu
-.onamazu.db
+onamazu.db

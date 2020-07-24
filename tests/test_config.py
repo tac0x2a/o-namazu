@@ -42,7 +42,7 @@ def test_return_default_configs():
         f'{ct.ROOT_DIR}': {
             "min_mod_interval": 1,
             "callback_delay": 0,
-            "db_file": ".onamazu.db",
+            "db_file": "onamazu.db",
             "ttl": -1,
             "archive": {
                 "type": "directory",

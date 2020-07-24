@@ -69,7 +69,7 @@ class NamazuHandler(PatternMatchingEventHandler):
 
         # Is observed file pattern?
         if 'pattern' not in conf:
-            logger.warn(f"Ignore '{src}': 'pattern' is not defined in '{parent}'/.onamazu")
+            logger.warn(f"Ignore '{src}': 'pattern' is not defined in '{parent}'/onamazu.conf")
             return
 
         pattern = conf['pattern']

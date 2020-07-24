@@ -25,7 +25,7 @@ def create_dir(dir_path):
         path.mkdir(parents=True)
 
 
-def place_config_file(dir_path: str, yaml_body: dict, conf_file_name='.onamazu'):
+def place_config_file(dir_path: str, yaml_body: dict, conf_file_name='onamazu.conf'):
     create_dir(dir_path)
     conf_file_path = "/".join([ROOT_DIR, dir_path, conf_file_name])
     with open(conf_file_path, 'w') as db:
