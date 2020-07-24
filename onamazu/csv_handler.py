@@ -5,6 +5,19 @@ from pathlib import Path
 
 
 def read(file_path: Path, conf) -> str:
+    """Read csv file
+
+    Args:
+        file_path (Path): File to the path
+        conf (dict): o-namazu config the directory.
+
+    Raises:
+        ValueError: If present dir path or is not exist path.
+
+    Returns:
+        str: Text read from the file.
+    """
+
     if Path.is_dir(file_path):
         raise ValueError(f"Unexpected path '{str(file_path)}'. Directory path is not allowed.")
 
@@ -13,6 +26,18 @@ def read(file_path: Path, conf) -> str:
 
 
 def _read_with_db(file_path: Path, conf: dict, file_db: dict, obj):
+    """Read csv file with db file of current directory.
+
+    Args:
+        file_path (Path): File to the path
+        conf (dict): o-namazu config the directory.
+        file_db (dict): Status of files in current directory.
+        obj (dict): Receive from read method via dfo.update_watching_file.
+
+    Returns:
+        [type]: [description]
+    """
+
     pos = file_db.get("read_completed_pos", 0)
     (body, new_pos) = _read_tail(file_path, pos, conf)
     file_db["read_completed_pos"] = new_pos
@@ -20,7 +45,17 @@ def _read_with_db(file_path: Path, conf: dict, file_db: dict, obj):
     return body
 
 
-def _read_tail(file_path: Path, already_read_pos: int, conf) -> (str, int):
+def _read_tail(file_path: Path, already_read_pos: int, conf: dict) -> (str, int):
+    """Read csv file from already_read_pos to end of the file.
+
+    Args:
+        file_path (Path): File to the path
+        already_read_pos (int): Position of the file that is already read.
+        conf (dict): o-namazu config the directory.
+
+    Returns:
+        (str, int): (read string, last read position)
+    """
 
     with file_path.open() as f:
         read_string = f.readline()  # header
