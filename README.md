@@ -5,7 +5,7 @@ Oh Namazu (Catfish) in datalake.
 
 # What is o-namazu ?
 o-namazu is data collector that traverse specified directories.
-You can be target of traverse just place `.onamazu` file.
+You can be target of traverse just place `onamazu.conf` file.
 
 ### Supported format and protocol
 + `csv` and multi-line `text`.
@@ -27,7 +27,7 @@ pyenv install 3.7.3 # your python version
 
 
 # Parameters
-Parameter should be write YAML format as `.onamazu` file. It should be placed for each directories that be observed.
+Parameter should be write YAML format as `onamazu.conf` file. It should be placed for each directories that be observed.
 
 ## `pattern: String`
 Pattern of filename. It should be arong unix shell file pattern. Please see [fnmatch document](https://docs.python.org/3/library/fnmatch.html)
@@ -113,9 +113,9 @@ Default value is 500000 byte (500K).
 Parameters are inherited from parent directory.
 
 #### Example
-There are 2 directories under root directory. All directries has `.onamazu` file. (i.e. there are obseved).
+There are 2 directories under root directory. All directries has `onamazu.conf` file. (i.e. there are obseved).
 
-+ `root_dir/.onamazu`
++ `root_dir/onamazu.conf`
   ```yaml
   pattern: "*.csv"
   ```
@@ -129,7 +129,7 @@ There are 2 directories under root directory. All directries has `.onamazu` file
 
   `min_mod_interval: 1` is one of the default values. It effects even if not write explicit.
 
-+ `root_dir/mario/.onamazu`
++ `root_dir/mario/onamazu.conf`
   ```yaml
   pattern: "*.json"
   ```
@@ -144,7 +144,7 @@ There are 2 directories under root directory. All directries has `.onamazu` file
   `pattern` is overwritten.
 
 
-+ `root_dir/luigi/.onamazu`
++ `root_dir/luigi/onamazu.conf`
   ```yaml
   min_mod_interval: 10
   ```
