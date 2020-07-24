@@ -54,9 +54,14 @@ def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config
     # Type: delete
     if archive_type == "delete":
         for file in files:
-            os.remove(str(file))
-            del dir_db["watching"][str(file.name)]
-            logger.info(f"Removed file '{file}' because ttl({ttl}) is expired.")
+            try:
+                os.remove(str(file))
+                logger.info(f"Deleted file '{file}' because ttl({ttl}) is expired.")
+            except Exception:
+                logger.exception(f"Delete '{file}' failed.")
+            finally:
+                del dir_db["watching"][str(file.name)]
+
         return
 
     archive_path = dir_path / archive_name
@@ -65,9 +70,14 @@ def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config
     if archive_type == "zip":
         with zipfile.ZipFile(str(archive_path), 'a', compression=zipfile.ZIP_DEFLATED) as zip_file:
             for file in files:
-                zip_file.write(str(file), arcname=file.name)
-                os.remove(str(file))
-                logger.info(f"Archive file '{file}' into zip `{archive_path}` because ttl({ttl}) is expired.")
+                try:
+                    zip_file.write(str(file), arcname=file.name)
+                    os.remove(str(file))
+                    logger.info(f"Archive file '{file}' into zip `{archive_path}` because ttl({ttl}) is expired.")
+                except Exception:
+                    logger.exception(f"Delete '{file}' failed.")
+                finally:
+                    del dir_db["watching"][str(file.name)]
         return
 
     # Type: directory
@@ -76,6 +86,12 @@ def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config
             archive_path.mkdir(parents=True)
 
         for file in files:
-            shutil.move(str(file), str(archive_path))
-            del dir_db["watching"][str(file.name)]
-            logger.info(f"Archive file '{file}' into `{archive_path}` because ttl({ttl}) is expired.")
+            try:
+                shutil.move(str(file), str(archive_path))
+                logger.info(f"Archive file '{file}' into `{archive_path}` because ttl({ttl}) is expired.")
+            except Exception:
+                logger.exception(f"Move '{file}' failed.")
+            finally:
+                del dir_db["watching"][str(file.name)]
+        return
+
