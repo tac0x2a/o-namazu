@@ -67,7 +67,9 @@ def sample_handler(ev):
             payloads = csv_handler.split(payload, length)
         elif format == "text":
             payload = text_handler.read(path, ev.config)
-            payloads = [payload]  # Todo split
+            line_count = len(payload.strip().split("\n"))
+            logger.info(f"Text Payload is {line_count} lines.")
+            payloads = text_handler.split(payload, length)
         else:
             logger.error(f"Unsupported format `{format}`, `{path}` has not sent.")
             return
