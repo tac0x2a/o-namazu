@@ -104,6 +104,10 @@ The file format `csv` or `text`.
 If use `csv`, when some rows append to the file, o-namazu will send header and appended rows only. When use `text`, just will send appended lines.
 Default value is `text`.
 
+### `length: Numeric`
+Max size of each message is sent. [byte]
+Default value is 500000 byte (500K).
+
 
 # Parameter inheritance of effects on observing directory
 Parameters are inherited from parent directory.

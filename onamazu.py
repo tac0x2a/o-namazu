@@ -6,6 +6,8 @@ import logging.handlers
 import os
 import sys
 from pathlib import Path
+from operator import add
+from functools import reduce
 
 import schedule
 from onamazu import (config, csv_handler, mqtt_sender, sweeper, text_handler, watcher)
@@ -41,38 +43,48 @@ if args.log_file:
 logger = logging.getLogger("o-namazu")
 logger.info(args)
 
+# -------------------------------------------------
+
 
 def sample_handler(ev):
     logger.info(f"{ev.src_path}@{ev.created_at}")
     path = Path(ev.src_path)
-    logger.info(f"{path.stat().st_size} bytes")
 
     if "mqtt" in ev.config:
         mqtt_config = ev.config["mqtt"]
+        mqtt_config = dict(config.DefaultConfig_MQTT, **mqtt_config)
+
         host = mqtt_config["host"]
         port = mqtt_config["port"]
         topic = mqtt_config["topic"]
         format = mqtt_config["format"]
-
-        mqtt = mqtt_sender.MQTT_Sender()
-        mqtt.connect(host, port)
+        length = mqtt_config["length"]
 
         if format == "csv":
             payload = csv_handler.read(path, ev.config)
+            line_count = len(payload.strip().split("\n"))
+            logger.info(f"CSV Payload is {line_count} lines.")
+            payloads = csv_handler.split(payload, length)
         elif format == "text":
             payload = text_handler.read(path, ev.config)
+            line_count = len(payload.strip().split("\n"))
+            logger.info(f"Text Payload is {line_count} lines.")
+            payloads = text_handler.split(payload, length)
         else:
             logger.error(f"Unsupported format `{format}`, `{path}` has not sent.")
             return
 
-        if len(payload) <= 0:
-            logger.info(f"Payload is empty. `{path}` was not sent")
+        if len(payloads) <= 0:
+            logger.info(f"No Payload found. Empty file ? `{path}` was not sent")
             return
 
-        line_count = len(payload.strip().split("\n"))
-        logger.info(f"MQTT send Start `{path}` as `{format}` ({len(payload)} bytes, {line_count} lines) will be sent")
-        mqtt.send(payload, topic)
-        logger.info(f"MQTT send Done `{path}`")
+        client_id = f"o-namazu_{os.uname()[1]}_{path}"
+        mqtt_sender.publish(payloads, client_id, topic, host, port)
+
+        lines = reduce(add, [len(payload.strip().split("\n")) for payload in payloads])
+        bytes = reduce(add, [len(payload) for payload in payloads])
+
+        logger.info(f"MQTT sent `{path}` done. {len(payloads)} messages, {lines} lines, {bytes} bytes.")
 
 
 # -------------------------------------------------
@@ -95,7 +107,7 @@ sweep_interval = int(args.archive_interval)
 schedule.every(sweep_interval).seconds.do(lambda: sweeper.sweep(config_map))
 
 logger.info(f"Observe started '{Directory}'")
-logger.info(f"Press 'Ctrl-c' to exit")
+logger.info("Press 'Ctrl-c' to exit")
 try:
     while True:
         w.wait(1)

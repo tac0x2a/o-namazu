@@ -37,6 +37,26 @@ DefaultConfig = {
     }
 }
 
+DefaultConfig_MQTT = {
+    # MQTT Broker host or IP address.
+    "host": "localhost",
+
+    # MQTT Broker port.
+    "port": 1883,
+
+    # Topic of published mqtt message.
+    "topic": "o-namazu",
+
+    # The file format `csv` or `text`.
+    # If use `csv`, when some rows append to the file, o-namazu will send header and appended rows only. When use `text`, just will send appended lines.
+    # Default value is `text`.
+    "format": "text",
+
+    # Max size of each message is sent. [byte]
+    # Default value is 500000 byte (500K).
+    "length": 500000
+}
+
 
 def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file: str = ".onamazu") -> dict:
     """

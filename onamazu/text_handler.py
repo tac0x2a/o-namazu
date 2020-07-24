@@ -20,3 +20,32 @@ def _read_with_db(file_path: Path, conf: dict, file_db: dict, obj):
     file_db["read_completed_pos"] = new_pos
 
     return body
+
+
+def split(string: str, length: int) -> []:
+    if len(string) <= length:
+        return [string]
+
+    lines = string.splitlines()
+    if len(lines) <= 1:
+        return [string]
+
+    result = []
+
+    tmp_joined = lines.pop(0) + '\n'
+    tmp_length = len(tmp_joined)
+
+    for line in lines:
+        ln = line + '\n'
+
+        if tmp_length + len(ln) > length:
+            result.append(tmp_joined)
+            tmp_joined = ''
+            tmp_length = len(tmp_joined)
+
+        tmp_joined += ln
+        tmp_length += len(ln)
+
+    result.append(tmp_joined)
+
+    return result
