@@ -87,8 +87,16 @@ def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config
 
         for file in files:
             try:
-                shutil.move(str(file), str(archive_path))
                 logger.info(f"Archive file '{file}' into `{archive_path}` because ttl({ttl}) is expired.")
+                dst_file_path = archive_path / file.name
+                print(dst_file_path)
+                if dst_file_path.exists():
+                    print(f"Archive file '{file}' is already exists in `{archive_path}`. It will be overwrite.")
+                    logger.warning(f"Archive file '{file}' is already exists in `{archive_path}`. It will be overwrite.")
+                    dst_file_path.unlink()
+
+                shutil.move(str(file), str(archive_path))
+
             except Exception:
                 logger.exception(f"Move '{file}' failed.")
             finally:

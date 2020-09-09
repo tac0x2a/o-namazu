@@ -62,6 +62,37 @@ def test_sweep_directory_files_into_archive_dir():
     assert Path(file_path_new).exists()
 
 
+def test_sweep_directory_files_into_archive_dir_overwrite_already_exists():
+    ct.place_config_file("", {"pattern": "*"})
+    conf = config.create_config_map(ct.ROOT_DIR)
+
+    dir_conf = conf[ct.ROOT_DIR]
+
+    events = []
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+    file_path_old = ct.write_csv("", "test.csv", [("hello", "world"), (1, 2), (3, 4)])
+    w.wait(1)
+    dir_db = ct.read_db_file(ct.ROOT_DIR)
+    sweeper._sweep_directory_files(Path(ct.ROOT_DIR), [Path(file_path_old)], dir_db, dir_conf)
+
+    w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+    w.start()
+    file_path_new = ct.write_csv("", "test.csv", [("hello", "world"), (5, 6), (7, 8)])
+    w.wait(1)
+    dir_db = ct.read_db_file(ct.ROOT_DIR)
+    expected_content = file_path_new.read_text()
+    sweeper._sweep_directory_files(Path(ct.ROOT_DIR), [Path(file_path_new)], dir_db, dir_conf)
+
+    assert not Path(file_path_old).exists()
+    assert not Path(file_path_new).exists()
+    archived_file = Path(ct.ROOT_DIR) / dir_conf["archive"]["name"] / Path(file_path_old).name
+    assert archived_file.exists()
+
+    actual_content = archived_file.read_text()
+    assert expected_content == actual_content
+
+
 def test_sweep_directory_files_delete():
     ct.place_config_file("", {"pattern": "*", "archive": {"type": "delete", "name": "dummy"}})
     conf = config.create_config_map(ct.ROOT_DIR)
