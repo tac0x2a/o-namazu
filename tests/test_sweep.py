@@ -1,4 +1,3 @@
-from unittest.mock import MagicMock
 from datetime import datetime, timezone, timedelta
 import zipfile
 import schedule
@@ -62,7 +61,7 @@ def test_sweep_directory_files_into_archive_dir():
     assert Path(file_path_new).exists()
 
 
-def test_sweep_directory_files_into_archive_already_exists_save_with_datetime_postfix(mocker):
+def test_sweep_directory_files_into_archive_already_exists_save_with_datetime_postfix():
     ct.place_config_file("", {"pattern": "*"})
     conf = config.create_config_map(ct.ROOT_DIR)
 
@@ -151,7 +150,7 @@ def test_sweep_directory_files_into_archive_zip():
         assert Path(file_path_old).name in existing_zip.namelist()
 
 
-def test_sweep_directory_files_into_archive_zip_already_exists_save_with_datetime_postfix(mocker):
+def test_sweep_directory_files_into_archive_zip_already_exists_save_with_datetime_postfix():
     ct.place_config_file("", {"pattern": "*", "archive": {"type": "zip", "name": "_archive.zip"}})
     conf = config.create_config_map(ct.ROOT_DIR)
 
