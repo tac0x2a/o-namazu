@@ -162,7 +162,6 @@ def test_sweep_directory_files_into_archive_zip_already_exists_save_with_datetim
     file_path_old = ct.write_csv("", "test.csv", [("hello", "world"), (1, 2), (3, 4)])
     w.wait(1)
     dir_db = ct.read_db_file(ct.ROOT_DIR)
-    # expected_content_old = file_path_old.read_text()
 
     sweeper._sweep_directory_files(Path(ct.ROOT_DIR), [Path(file_path_old)], dir_db, dir_conf)
 
@@ -171,7 +170,6 @@ def test_sweep_directory_files_into_archive_zip_already_exists_save_with_datetim
     file_path_new = ct.write_csv("", "test.csv", [("hello", "world"), (5, 6), (7, 8)])
     w.wait(1)
     dir_db = ct.read_db_file(ct.ROOT_DIR)
-    # expected_content_new = file_path_new.read_text()
 
     now = datetime(2019, 8, 15, 1, 39, 0, 0 * 1000, timezone(timedelta(hours=-6)))
     sweeper._sweep_directory_files(Path(ct.ROOT_DIR), [Path(file_path_new)], dir_db, dir_conf, now)
