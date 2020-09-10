@@ -1,6 +1,5 @@
 from pathlib import Path
-from datetime import datetime
-from datetime import timezone
+from datetime import datetime, timezone
 
 from onamazu import db_file_operator as dfo
 
@@ -14,7 +13,7 @@ logger = logging.getLogger("o-namazu")
 
 def sweep(config, now: datetime = None):
     if now is None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now()
     logger.debug(f"Sweeep started. config:{config}, now:{now}")
     dfo.update_all_db_files(config, _sweep_callback, {"now": now})
 
@@ -26,7 +25,7 @@ def _sweep_callback(dbs: dict, config_all: dict, obj: dict):
         dir_path = Path(dir)
 
         expired_file_list = _sweep_directory_list_target(dir_path, dir_db, dir_config, now)
-        _sweep_directory_files(dir_path, expired_file_list, dir_db, dir_config)
+        _sweep_directory_files(dir_path, expired_file_list, dir_db, dir_config, now)
 
 
 def _sweep_directory_list_target(dir_path: Path, dir_db: dict, dir_config: dict, now: datetime) -> list:
@@ -45,7 +44,10 @@ def _sweep_directory_list_target(dir_path: Path, dir_db: dict, dir_config: dict,
     return [Path(f) for f, l_timestamp in last_detected_list.items() if now_timestamp - l_timestamp >= ttl]
 
 
-def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config: dict):
+def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config: dict, now: datetime = None):
+    if now is None:
+        now = datetime.now()
+
     ttl = dir_config["ttl"]
     archive = dir_config["archive"]
     archive_type = archive.get("type", "directory")
@@ -70,8 +72,13 @@ def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config
     if archive_type == "zip":
         with zipfile.ZipFile(str(archive_path), 'a', compression=zipfile.ZIP_DEFLATED) as zip_file:
             for file in files:
+
+                arcname = file.name
+                if file.name in zip_file.namelist():
+                    arcname = __generate_name_with_datetime(file, now)
+
                 try:
-                    zip_file.write(str(file), arcname=file.name)
+                    zip_file.write(str(file), arcname=arcname)
                     os.remove(str(file))
                     logger.info(f"Archive file '{file}' into zip `{archive_path}` because ttl({ttl}) is expired.")
                 except Exception:
@@ -87,11 +94,21 @@ def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config
 
         for file in files:
             try:
-                shutil.move(str(file), str(archive_path))
                 logger.info(f"Archive file '{file}' into `{archive_path}` because ttl({ttl}) is expired.")
+                dst_file_path = archive_path / file.name
+
+                if dst_file_path.exists():
+                    dst_file_path = archive_path / __generate_name_with_datetime(file, now)
+                    logger.warning(f"Archive file '{file}' is already exists in `{archive_path}`. It will be save as '{dst_file_path}")
+
+                shutil.move(str(file), str(dst_file_path))
+
             except Exception:
                 logger.exception(f"Move '{file}' failed.")
             finally:
                 del dir_db["watching"][str(file.name)]
         return
 
+
+def __generate_name_with_datetime(file_path: Path, now: datetime):
+    return file_path.stem + '_' + now.strftime('%Y%m%d%H%M%S') + file_path.suffix
