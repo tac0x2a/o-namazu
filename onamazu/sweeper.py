@@ -72,8 +72,13 @@ def _sweep_directory_files(dir_path: Path, files: list, dir_db: dict, dir_config
     if archive_type == "zip":
         with zipfile.ZipFile(str(archive_path), 'a', compression=zipfile.ZIP_DEFLATED) as zip_file:
             for file in files:
+
+                arcname = file.name
+                if file.name in zip_file.namelist():
+                    arcname = __generate_name_with_datetime(file, now)
+
                 try:
-                    zip_file.write(str(file), arcname=file.name)
+                    zip_file.write(str(file), arcname=arcname)
                     os.remove(str(file))
                     logger.info(f"Archive file '{file}' into zip `{archive_path}` because ttl({ttl}) is expired.")
                 except Exception:
