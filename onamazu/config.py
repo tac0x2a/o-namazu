@@ -5,6 +5,7 @@ import yaml
 import logging
 logger = logging.getLogger("o-namazu")
 
+ConfigFileName = "onamazu.conf"
 
 DefaultConfig = {
     # Minimum modification interval [sec].
@@ -58,7 +59,7 @@ DefaultConfig_MQTT = {
 }
 
 
-def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file: str = "onamazu.conf") -> dict:
+def create_config_map(root_dir_path: str, default_conf=DefaultConfig) -> dict:
     """
     Load config parameters each dirs.
     Config file should be written in YAML format.
@@ -70,9 +71,6 @@ def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file:
     Arguments:
         root_dir_path {str} -- Path to root dir.
 
-    Keyword Arguments:
-        conf_file {str} -- Name of config file. (default: {"onamazu.conf"})
-
     Returns:
         dict -- Key: dir path, Value: dict of parameters.
     """
@@ -80,7 +78,7 @@ def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file:
     # Default Values
     config_map = {}
 
-    create_config_map_sub(Path(root_dir_path), conf_file, default_conf, config_map)
+    create_config_map_sub(Path(root_dir_path), ConfigFileName, default_conf, config_map)
 
     return config_map
 

@@ -67,6 +67,10 @@ class NamazuHandler(PatternMatchingEventHandler):
         conf = self.config[parent]
         event = NamazuEvent(event, conf)
 
+        # Is it configfile
+        if src_path.name == cfg.ConfigFileName:
+            logger.info(f"{src_path} is modified.")
+
         # Is observed file pattern?
         if 'pattern' not in conf:
             logger.warn(f"Ignore '{src}': 'pattern' is not defined in '{parent}'/onamazu.conf")
@@ -120,6 +124,7 @@ class NamazuWatcher():
 
     def start(self):
         target_patterns = [v['pattern'] for k, v in self.config.items()]
+        target_patterns.append('*' + cfg.ConfigFileName)
 
         logger.debug(f"{self.config}")
         logger.debug(f'watching {target_patterns} in {self.root_dir_path}')
