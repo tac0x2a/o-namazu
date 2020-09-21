@@ -5,6 +5,7 @@ import yaml
 import logging
 logger = logging.getLogger("o-namazu")
 
+ConfigFileName = "onamazu.conf"
 
 DefaultConfig = {
     # Minimum modification interval [sec].
@@ -58,7 +59,7 @@ DefaultConfig_MQTT = {
 }
 
 
-def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file: str = "onamazu.conf") -> dict:
+def create_config_map(root_dir_path: str, default_conf=DefaultConfig) -> dict:
     """
     Load config parameters each dirs.
     Config file should be written in YAML format.
@@ -70,9 +71,6 @@ def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file:
     Arguments:
         root_dir_path {str} -- Path to root dir.
 
-    Keyword Arguments:
-        conf_file {str} -- Name of config file. (default: {"onamazu.conf"})
-
     Returns:
         dict -- Key: dir path, Value: dict of parameters.
     """
@@ -80,7 +78,7 @@ def create_config_map(root_dir_path: str, default_conf=DefaultConfig, conf_file:
     # Default Values
     config_map = {}
 
-    create_config_map_sub(Path(root_dir_path), conf_file, default_conf, config_map)
+    create_config_map_sub(Path(root_dir_path), ConfigFileName, default_conf, config_map)
 
     return config_map
 
@@ -91,12 +89,9 @@ def create_config_map_sub(dir_path: Path, conf_file_name: str, current_config: d
 
     conf_file_path = dir_path / conf_file_name
     if Path.exists(conf_file_path):
-        try:
-            parsed = parse_config(conf_file_path)
-            current_config = dict(current_config, **parsed)  # overwrite parent dir config by current dir config
-            config_map[str(dir_path)] = current_config
-        except Exception as e:
-            logger.error(e, exc_info=e)
+        parsed = parse_config(conf_file_path)
+        current_config = dict(current_config, **parsed)  # overwrite parent dir config by current dir config
+        config_map[str(dir_path)] = current_config
 
     # Recursive load
     for d in [d for d in dir_path.iterdir() if d.is_dir()]:

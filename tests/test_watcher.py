@@ -97,15 +97,14 @@ def test_ignore_duplicated_events_in_callback_delay():
     w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
     w.start()
 
-    ct.place_file("", f"hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
-    ct.place_file("", f"hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
-    ct.place_file("", f"hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
-    ct.place_file("", f"hoge.csv", "hello,csv"); w.wait(1)
+    ct.place_file("", "hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
+    ct.place_file("", "hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
+    ct.place_file("", "hoge.csv", "hello,csv"); w.wait(1)  # will be ignored
+    ct.place_file("", "hoge.csv", "hello,csv"); w.wait(1)
     w.wait(3)  # 1event
+    w.stop()
 
     assert 1 == len(events)
-
-    w.stop()
 
 
 def test_ignore_duplicated_events_in_callback_delay_multi_dir():

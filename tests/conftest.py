@@ -27,9 +27,13 @@ def create_dir(dir_path):
 
 def place_config_file(dir_path: str, yaml_body: dict, conf_file_name='onamazu.conf'):
     create_dir(dir_path)
-    conf_file_path = "/".join([ROOT_DIR, dir_path, conf_file_name])
+    conf_file_path = "/".join([ROOT_DIR, dir_path, config.ConfigFileName])
     with open(conf_file_path, 'w') as db:
         yaml.dump(yaml_body, db)
+
+
+def delete_config_file(dir_path: str, conf_file_name='onamazu.conf'):
+    (Path(ROOT_DIR) / dir_path / conf_file_name).unlink()
 
 
 def place_file(dir_path: str, file_name: str, body: str, last_detected: datetime = None) -> str:
@@ -37,10 +41,9 @@ def place_file(dir_path: str, file_name: str, body: str, last_detected: datetime
     file_path = Path(ROOT_DIR) / dir_path / file_name
     with file_path.open('a') as db:
         db.write(body)
-    print(f"place file:{file_path}")
 
     if last_detected is None:
-       return file_path
+        return file_path
 
 
 def mod_last_detected(file_path: Path, last_detected: datetime):
