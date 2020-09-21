@@ -20,9 +20,8 @@ logger = logging.getLogger("o-namazu")
 
 
 class NamazuEvent():
-    def __init__(self, event, config=None):
-        self.event = event
-        self.src_path = event.src_path
+    def __init__(self, src_path: str, config=None):
+        self.src_path: str = src_path
         self.created_at = time.time()
         self.config = config
 
@@ -37,42 +36,31 @@ class NamazuHandler(PatternMatchingEventHandler):
         self.last_modified = {}
 
     def on_moved(self, event):
-        logger.debug(f"on_moved:{event.src_path} -> { event.dest_path}")
-        self.judge_conf(event)
+        logger.debug(f"on_moved:{event.src_path} -> {event.dest_path}")
 
     def on_created(self, event):
         logger.debug(f"on_created:{event.src_path}")
-        self.judge_conf(event)
+        src_path = Path(event.src_path)
+        self.judge_conf(src_path)
 
     def on_deleted(self, event):
         logger.debug(f"on_deleted:{event.src_path}")
-        self.judge_conf(event)
+        src_path = Path(event.src_path)
+        self.judge_conf(src_path)
 
     def on_modified(self, event):
         logger.debug(f"on_modified:{event.src_path}")
-        self.judge(event)
-        self.judge_conf(event)
+        src_path = Path(event.src_path)
+        self.judge(src_path)
+        self.judge_conf(src_path)
 
-    def judge_conf(self, event):
-        src = event.src_path
-        src_path = Path(src)
-        event = NamazuEvent(event)
-
-        # Is it configfile
-        if src_path.name == cfg.ConfigFileName:
-            logger.debug(f"{src_path} is modified.")
-            if self.confifg_updated_callback is not None:
-                Timer(1, lambda: self.confifg_updated_callback(event)).start()
-            return
-
-    def judge(self, event):
-        src = event.src_path
-        src_path = Path(src)
+    def judge(self, src_path: Path):
         file_name = src_path.name
+        src_str = str(src_path)
 
         # Is it file?
         if not src_path.is_file():
-            logger.debug(f"Ignore '{src}': Is not a file")
+            logger.debug(f"Ignore '{src_path}': Is not a file")
             return
 
         # Is it configfile
@@ -82,41 +70,41 @@ class NamazuHandler(PatternMatchingEventHandler):
         # Is observed directory?
         parent = str(src_path.parent)
         if parent not in self.config:
-            logger.debug(f"Ignore '{src}': Not observed directory '{parent}'")
+            logger.debug(f"Ignore '{src_str}': Not observed directory '{parent}'")
             return
 
         conf = self.config[parent]
-        event = NamazuEvent(event, conf)
+        event = NamazuEvent(src_str, conf)
 
         # Is observed file pattern?
         if 'pattern' not in conf:
-            logger.warn(f"Ignore '{src}': 'pattern' is not defined in '{parent}'/onamazu.conf")
+            logger.warn(f"Ignore '{src_str}': 'pattern' is not defined in '{parent}'/onamazu.conf")
             return
 
         pattern = conf['pattern']
         if not fnmatch.fnmatch(file_name, pattern):
-            logger.debug(f"Ignore '{src}': Is not matched observed file pattern('{pattern})")
+            logger.debug(f"Ignore '{src_str}': Is not matched observed file pattern('{pattern})")
             return
 
         # Is o-namazu created DB file ?
         db_file = conf['db_file']
         if db_file == file_name:
-            logger.debug(f"Ignore '{src}': db_file will be ignored('{db_file})")
+            logger.debug(f"Ignore '{src_str}': db_file will be ignored('{db_file})")
             return
 
         # Is duplicated
         #  modified event?
-        if src in self.last_modified:
-            diff = event.created_at - self.last_modified[src].created_at
+        if src_str in self.last_modified:
+            diff = event.created_at - self.last_modified[src_str].created_at
             min_mod_interval = conf["min_mod_interval"]
             if diff < min_mod_interval:  # replace value by config
-                logger.debug(f"Ignore '{src}': interval({diff}) is short than min_mod_interval({min_mod_interval})")
+                logger.debug(f"Ignore '{src_str}': interval({diff}) is short than min_mod_interval({min_mod_interval})")
                 return
 
-        if src in self.last_modified:
-            logger.debug(f"Received new modified event '{src}' @ {event.created_at}")
+        if src_str in self.last_modified:
+            logger.debug(f"Received new modified event '{src_str}' @ {event.created_at}")
 
-        self.last_modified[src] = event
+        self.last_modified[src_str] = event
         Timer(conf["callback_delay"], lambda: self.inject_callback(event)).start()
 
     def inject_callback(self, event):
@@ -127,6 +115,16 @@ class NamazuHandler(PatternMatchingEventHandler):
 
         else:
             logger.debug(f"Skipped {event}")
+
+    def judge_conf(self, src_path: Path):
+        event = NamazuEvent(str(src_path))
+
+        # Is it configfile
+        if src_path.name == cfg.ConfigFileName:
+            logger.debug(f"{src_path} is modified.")
+            if self.confifg_updated_callback is not None:
+                Timer(1, lambda: self.confifg_updated_callback(event)).start()
+            return
 
     def _update_last_detected(self, file_path, config, file_db, event):
         modTimesinceEpoc = datetime.now().timestamp()
