@@ -1,4 +1,4 @@
-
+import os
 import logging
 import schedule
 from pathlib import Path
@@ -29,7 +29,7 @@ class ONamazu:
     def __restart_observers(self, config_map):
         if self.w is not None:
             self.w.stop()
-        self.w = watcher.NamazuWatcher(self.root_dir, config_map, self.sample_handler, self.on_config_updated_handler)
+        self.w = watcher.NamazuWatcher(self.root_dir, config_map, self.event_handler, self.on_config_updated_handler)
         self.w.start()
 
         schedule.clear()
@@ -63,7 +63,7 @@ class ONamazu:
         self.w.wait(1)
         schedule.run_pending()
 
-    def sample_handler(self, ev):
+    def event_handler(self, ev):
         self.logger.info(f"{ev.src_path}@{ev.created_at}")
         path = Path(ev.src_path)
 
