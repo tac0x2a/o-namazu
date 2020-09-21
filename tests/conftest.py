@@ -32,6 +32,10 @@ def place_config_file(dir_path: str, yaml_body: dict, conf_file_name='onamazu.co
         yaml.dump(yaml_body, db)
 
 
+def delete_config_file(dir_path: str, conf_file_name='onamazu.conf'):
+    (Path(ROOT_DIR) / dir_path / conf_file_name).unlink()
+
+
 def place_file(dir_path: str, file_name: str, body: str, last_detected: datetime = None) -> str:
     create_dir(dir_path)
     file_path = Path(ROOT_DIR) / dir_path / file_name
