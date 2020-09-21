@@ -62,7 +62,7 @@ class NamazuHandler(PatternMatchingEventHandler):
         if src_path.name == cfg.ConfigFileName:
             logger.debug(f"{src_path} is modified.")
             if self.confifg_updated_callback is not None:
-                self.confifg_updated_callback(event)
+                Timer(1, lambda: self.confifg_updated_callback(event)).start()
             return
 
     def judge(self, event):
