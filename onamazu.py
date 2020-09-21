@@ -4,7 +4,6 @@ import argparse
 import logging
 import logging.handlers
 import os
-import sys
 from pathlib import Path
 from operator import add
 from functools import reduce
@@ -12,154 +11,160 @@ from functools import reduce
 import schedule
 from onamazu import (config, csv_handler, mqtt_sender, sweeper, text_handler, watcher)
 
-# -------------------------------------------------
 
-# -------------------------------------------------
-# Argument Parsing
-parser = argparse.ArgumentParser(description='Observe file modification recursively, and callback')
-parser.add_argument('observe_directory', help='Target to observe directory')  # Required
-parser.add_argument('--archive_interval', help='Traverse interval seconds to judge the file should be archive [sec]', default=60)
+class ONamazu():
+    def __init__(self, root_dir: str, sweep_interval: int, logger=logging.getLogger("o-namazu")):
+        self.root_dir = root_dir
+        self.sweep_interval = sweep_interval
+        self.logger = logger
+        self.w = None
+        self.initialize_required = True
 
-parser.add_argument('--log-level', help='Log level', choices=['DEBUG', 'INFO', 'WARN', 'ERROR'], default='INFO')
-parser.add_argument('--log-format', help='Log format by \'logging\' package', default='[%(levelname)s] %(asctime)s | %(pathname)s(L%(lineno)s) | %(message)s')  # Optional
-parser.add_argument('--log-file', help='Log file path')
-parser.add_argument('--log-file-count', help='Log file keep count', type=int, default=1000)
-parser.add_argument('--log-file-size', help='Size of each log file', type=int, default=1000000)  # default 1MB
-args = parser.parse_args()
+    def __load_config(self):
+        self.logger.info('Load configuration')
 
-Directory = args.observe_directory
+        config_map = config.create_config_map(self.root_dir)
+        self.logger.info(f'config_map={config_map}')
 
-# Logger initialize
-logging.basicConfig(level=args.log_level, format=args.log_format)
+        if len(config_map) == 0:
+            raise Exception("No config file found. Please see README.md")
 
-if args.log_file:
-    dir = os.path.dirname(args.log_file)
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+        return config_map
 
-    fh = logging.handlers.RotatingFileHandler(args.log_file, maxBytes=args.log_file_size, backupCount=args.log_file_count)
-    fh.setFormatter(logging.Formatter(args.log_format))
-    fh.setLevel(args.log_level)
-    logging.getLogger().addHandler(fh)
+    def __restart_observers(self, config_map):
+        if self.w is not None:
+            self.w.stop()
+        self.w = watcher.NamazuWatcher(self.root_dir, config_map, self.sample_handler, self.on_config_updated_handler)
+        self.w.start()
 
-logger = logging.getLogger("o-namazu")
-logger.info(args)
+        schedule.clear()
+        schedule.every(self.sweep_interval).seconds.do(lambda: sweeper.sweep(config_map))
 
-# Be quiet schedule-lib !!
-ScheduleLogLevel = "WARN"
-if args.log_level == "DEBUG":
-    ScheduleLogLevel = "DEBUG"
-logging.getLogger('schedule').setLevel(ScheduleLogLevel)
-logger.info(f"Change 'schedule-lib' log level to {ScheduleLogLevel}")
-# logging.getLogger('schedule').propagate = False
-
-# -------------------------------------------------
-def sample_handler(ev):
-    logger.info(f"{ev.src_path}@{ev.created_at}")
-    path = Path(ev.src_path)
-
-    if "mqtt" in ev.config:
-        mqtt_config = ev.config["mqtt"]
-        mqtt_config = dict(config.DefaultConfig_MQTT, **mqtt_config)
-
-        host = mqtt_config["host"]
-        port = mqtt_config["port"]
-        topic = mqtt_config["topic"]
-        format = mqtt_config["format"]
-        length = mqtt_config["length"]
-
-        if format == "csv":
-            payload = csv_handler.read(path, ev.config)
-            line_count = len(payload.strip().split("\n"))
-            logger.info(f"CSV Payload is {line_count} lines.")
-            payloads = csv_handler.split(payload, length)
-        elif format == "text":
-            payload = text_handler.read(path, ev.config)
-            line_count = len(payload.strip().split("\n"))
-            logger.info(f"Text Payload is {line_count} lines.")
-            payloads = text_handler.split(payload, length)
-        else:
-            logger.error(f"Unsupported format `{format}`, `{path}` has not sent.")
-            return
-
-        if len(payloads) <= 0:
-            logger.info(f"No Payload found. Empty file ? `{path}` was not sent")
-            return
-
-        client_id = f"o-namazu_{os.uname()[1]}_{path}"
-        mqtt_sender.publish(payloads, client_id, topic, host, port)
-
-        lines = reduce(add, [len(payload.strip().split("\n")) for payload in payloads])
-        bytes = reduce(add, [len(payload) for payload in payloads])
-
-        logger.info(f"MQTT sent `{path}` done. {len(payloads)} messages, {lines} lines, {bytes} bytes.")
-
-
-initialize_required: bool = True
-
-
-def on_config_updated_handler(ev):
-    logger.info(f"{ev.src_path}@{ev.created_at}")
-    path = Path(ev.src_path)
-    logger.info(f"ConfigFile is changed: {path}")
-    global initialize_required
-
-    logger.info("Reloading all config files.")
-    initialize_required = True
-
-# -------------------------------------------------
-
-
-def initialize(Directory: str, sample_handler, on_config_updated_handler, sweep_interval: int):
-    logger.info('Load configuration')
-
-    config_map = config.create_config_map(Directory)
-    logger.info(f'config_map={config_map}')
-
-    if len(config_map) == 0:
-        raise Exception("No config file found. Please see README.md")
-
-    for path, json in config_map.items():
-        logger.info(f'Watching: {path}/{json["pattern"]}')
-
-    _watcher = watcher.NamazuWatcher(Directory, config_map, sample_handler, on_config_updated_handler)
-    schedule.every(sweep_interval).seconds.do(lambda: sweeper.sweep(config_map))
-
-    return (_watcher, schedule)
-
-
-try:
-    w, s = (None, None)
-    while True:
-        if initialize_required:
-
+    def click(self):
+        if self.initialize_required:
             try:
-                _w, _s = initialize(Directory, sample_handler, on_config_updated_handler, int(args.archive_interval))
+                new_config_map = self.__load_config()
+                self.logger.info('Load completed.')
 
-                if w is not None and s is not None:
-                    w.stop()
-                    s.clear()
+                for path, json in new_config_map.items():
+                    self.logger.info(f'Watching: {path}/{json["pattern"]}')
 
-                w, s = _w, _s
+                self.__restart_observers(new_config_map)
 
-                w.start()
-                logger.info(f"Observe started '{Directory}'")
-                logger.info("Press 'Ctrl-c' to exit")
+                self.logger.info(f"Observe started '{self.root_dir}'")
+                self.logger.info("Press 'Ctrl-c' to exit")
 
             except Exception as e:
-                logger.error(e, exc_info=e)
-                logger.error("Error in initialize. Configuration is not applied.")
+                self.logger.error(e, exc_info=e)
+                self.logger.error("Error in initialize. Configuration is not applied.")
 
-                if w is None:
-                    logger.error("Failed to initialize. exitting...")
-                    sys.exit()
+                if self.w is None:
+                    self.logger.error("Failed to first initialize.")
+                    raise e
 
             finally:
-                initialize_required = False
+                self.initialize_required = False
 
-        w.wait(1)
-        s.run_pending()
+        self.w.wait(1)
+        schedule.run_pending()
 
-except KeyboardInterrupt:
-    logger.info("Interrupted. shutting down...")
-    w.stop()
+    def sample_handler(self, ev):
+        self.logger.info(f"{ev.src_path}@{ev.created_at}")
+        path = Path(ev.src_path)
+
+        if "mqtt" in ev.config:
+            mqtt_config = ev.config["mqtt"]
+            mqtt_config = dict(config.DefaultConfig_MQTT, **mqtt_config)
+
+            host = mqtt_config["host"]
+            port = mqtt_config["port"]
+            topic = mqtt_config["topic"]
+            format = mqtt_config["format"]
+            length = mqtt_config["length"]
+
+            if format == "csv":
+                payload = csv_handler.read(path, ev.config)
+                line_count = len(payload.strip().split("\n"))
+                self.logger.info(f"CSV Payload is {line_count} lines.")
+                payloads = csv_handler.split(payload, length)
+            elif format == "text":
+                payload = text_handler.read(path, ev.config)
+                line_count = len(payload.strip().split("\n"))
+                self.logger.info(f"Text Payload is {line_count} lines.")
+                payloads = text_handler.split(payload, length)
+            else:
+                self.logger.error(f"Unsupported format `{format}`, `{path}` has not sent.")
+                return
+
+            if len(payloads) <= 0:
+                self.logger.info(f"No Payload found. Empty file ? `{path}` was not sent")
+                return
+
+            client_id = f"o-namazu_{os.uname()[1]}_{path}"
+            mqtt_sender.publish(payloads, client_id, topic, host, port)
+
+            lines = reduce(add, [len(payload.strip().split("\n")) for payload in payloads])
+            bytes = reduce(add, [len(payload) for payload in payloads])
+
+            self.logger.info(f"MQTT sent `{path}` done. {len(payloads)} messages, {lines} lines, {bytes} bytes.")
+
+    def on_config_updated_handler(self, ev):
+        self.logger.debug(f"{ev.src_path}@{ev.created_at}")
+        self.logger.info(f"ConfigFile({ev.src_path}) is changed. All configuration files will be reload.")
+        self.initialize_required = True
+
+    def stop(self):
+        if self.w is not None:
+            self.w.stop()
+        schedule.clear()
+
+
+if __name__ == '__main__':
+    # Argument Parsing
+    parser = argparse.ArgumentParser(description='Observe file modification recursively, and callback')
+    parser.add_argument('observe_directory', help='Target to observe directory')  # Required
+    parser.add_argument('--archive_interval', help='Traverse interval seconds to judge the file should be archive [sec]', type=int, default=60)
+
+    parser.add_argument('--log-level', help='Log level', choices=['DEBUG', 'INFO', 'WARN', 'ERROR'], default='INFO')
+    parser.add_argument('--log-format', help='Log format by \'logging\' package', default='[%(levelname)s] %(asctime)s | %(pathname)s(L%(lineno)s) | %(message)s')  # Optional
+    parser.add_argument('--log-file', help='Log file path')
+    parser.add_argument('--log-file-count', help='Log file keep count', type=int, default=1000)
+    parser.add_argument('--log-file-size', help='Size of each log file', type=int, default=1000000)  # default 1MB
+    args = parser.parse_args()
+
+
+    # Logger initialize
+    logging.basicConfig(level=args.log_level, format=args.log_format)
+
+    if args.log_file:
+        dir = os.path.dirname(args.log_file)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
+        fh = logging.handlers.RotatingFileHandler(args.log_file, maxBytes=args.log_file_size, backupCount=args.log_file_count)
+        fh.setFormatter(logging.Formatter(args.log_format))
+        fh.setLevel(args.log_level)
+        logging.getLogger().addHandler(fh)
+
+    logger = logging.getLogger("o-namazu")
+    logger.info(args)
+
+    # Be quiet schedule-lib !!
+    ScheduleLogLevel = "WARN"
+    if args.log_level == "DEBUG":
+        ScheduleLogLevel = "DEBUG"
+    logging.getLogger('schedule').setLevel(ScheduleLogLevel)
+    logger.info(f"Change 'schedule-lib' log level to {ScheduleLogLevel}")
+
+    # -----------------------------------------------
+    onamazu = ONamazu(args.observe_directory, args.archive_interval, logger)
+    try:
+        while True:
+            onamazu.click()
+    except KeyboardInterrupt:
+        logger.info("Interrupted. shutting down...")
+        onamazu.stop()
+
+    except Exception as e:
+        logger.error(e, exc_info=e)
+        logger.error("It's error! Shutting down...")
