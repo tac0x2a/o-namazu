@@ -20,7 +20,7 @@ logger = logging.getLogger("o-namazu")
 
 
 class NamazuEvent():
-    def __init__(self, event, config):
+    def __init__(self, event, config=None):
         self.event = event
         self.src_path = event.src_path
         self.created_at = time.time()
@@ -28,25 +28,42 @@ class NamazuEvent():
 
 
 class NamazuHandler(PatternMatchingEventHandler):
-    def __init__(self, patterns, config, callback):
+    def __init__(self, patterns, config, callback, confifg_updated_callback):
         patterns = list(set(patterns))
         super(NamazuHandler, self).__init__(patterns=patterns)
         self.config = config
         self.callback = callback
+        self.confifg_updated_callback = confifg_updated_callback
         self.last_modified = {}
 
     def on_moved(self, event):
         logger.debug(f"on_moved:{event.src_path} -> { event.dest_path}")
+        self.judge_conf(event)
 
     def on_created(self, event):
         logger.debug(f"on_created:{event.src_path}")
+        self.judge_conf(event)
 
     def on_deleted(self, event):
         logger.debug(f"on_deleted:{event.src_path}")
+        self.judge_conf(event)
 
     def on_modified(self, event):
         logger.debug(f"on_modified:{event.src_path}")
         self.judge(event)
+        self.judge_conf(event)
+
+    def judge_conf(self, event):
+        src = event.src_path
+        src_path = Path(src)
+        event = NamazuEvent(event)
+
+        # Is it configfile
+        if src_path.name == cfg.ConfigFileName:
+            logger.debug(f"{src_path} is modified.")
+            if self.confifg_updated_callback is not None:
+                self.confifg_updated_callback(event)
+            return
 
     def judge(self, event):
         src = event.src_path
@@ -55,21 +72,21 @@ class NamazuHandler(PatternMatchingEventHandler):
 
         # Is it file?
         if not src_path.is_file():
-            logger.info(f"Ignore '{src}': Is not a file")
+            logger.debug(f"Ignore '{src}': Is not a file")
+            return
+
+        # Is it configfile
+        if src_path.name == cfg.ConfigFileName:
             return
 
         # Is observed directory?
         parent = str(src_path.parent)
         if parent not in self.config:
-            logger.info(f"Ignore '{src}': Not observed directory '{parent}'")
+            logger.debug(f"Ignore '{src}': Not observed directory '{parent}'")
             return
 
         conf = self.config[parent]
         event = NamazuEvent(event, conf)
-
-        # Is it configfile
-        if src_path.name == cfg.ConfigFileName:
-            logger.info(f"{src_path} is modified.")
 
         # Is observed file pattern?
         if 'pattern' not in conf:
@@ -87,7 +104,8 @@ class NamazuHandler(PatternMatchingEventHandler):
             logger.debug(f"Ignore '{src}': db_file will be ignored('{db_file})")
             return
 
-        # Is duplicated modified event?
+        # Is duplicated
+        #  modified event?
         if src in self.last_modified:
             diff = event.created_at - self.last_modified[src].created_at
             min_mod_interval = conf["min_mod_interval"]
@@ -117,10 +135,11 @@ class NamazuHandler(PatternMatchingEventHandler):
 
 
 class NamazuWatcher():
-    def __init__(self, root_dir_path, config, callback):
+    def __init__(self, root_dir_path, config, callback, confifg_updated_callback=None):
         self.root_dir_path = root_dir_path
         self.config = config
         self.callback = callback
+        self.confifg_updated_callback = confifg_updated_callback
 
     def start(self):
         target_patterns = [v['pattern'] for k, v in self.config.items()]
@@ -129,7 +148,7 @@ class NamazuWatcher():
         logger.debug(f"{self.config}")
         logger.debug(f'watching {target_patterns} in {self.root_dir_path}')
 
-        event_handler = NamazuHandler(target_patterns, self.config, self.callback)
+        event_handler = NamazuHandler(target_patterns, self.config, self.callback, self.confifg_updated_callback)
         self.observer = Observer()
         self.observer.schedule(event_handler, self.root_dir_path, recursive=True)
         self.observer.start()

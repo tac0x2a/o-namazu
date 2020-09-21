@@ -89,12 +89,9 @@ def create_config_map_sub(dir_path: Path, conf_file_name: str, current_config: d
 
     conf_file_path = dir_path / conf_file_name
     if Path.exists(conf_file_path):
-        try:
-            parsed = parse_config(conf_file_path)
-            current_config = dict(current_config, **parsed)  # overwrite parent dir config by current dir config
-            config_map[str(dir_path)] = current_config
-        except Exception as e:
-            logger.error(e, exc_info=e)
+        parsed = parse_config(conf_file_path)
+        current_config = dict(current_config, **parsed)  # overwrite parent dir config by current dir config
+        config_map[str(dir_path)] = current_config
 
     # Recursive load
     for d in [d for d in dir_path.iterdir() if d.is_dir()]:

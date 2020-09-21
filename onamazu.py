@@ -54,8 +54,6 @@ logger.info(f"Change 'schedule-lib' log level to {ScheduleLogLevel}")
 # logging.getLogger('schedule').propagate = False
 
 # -------------------------------------------------
-
-
 def sample_handler(ev):
     logger.info(f"{ev.src_path}@{ev.created_at}")
     path = Path(ev.src_path)
@@ -97,30 +95,71 @@ def sample_handler(ev):
         logger.info(f"MQTT sent `{path}` done. {len(payloads)} messages, {lines} lines, {bytes} bytes.")
 
 
+initialize_required: bool = True
+
+
+def on_config_updated_handler(ev):
+    logger.info(f"{ev.src_path}@{ev.created_at}")
+    path = Path(ev.src_path)
+    logger.info(f"ConfigFile is changed: {path}")
+    global initialize_required
+
+    logger.info("Reloading all config files.")
+    initialize_required = True
+
 # -------------------------------------------------
 
 
-config_map = config.create_config_map(Directory)
-logger.info(f'config_map={config_map}')
+def initialize(Directory: str, sample_handler, on_config_updated_handler, sweep_interval: int):
+    logger.info('Load configuration')
 
-if len(config_map) == 0:
-    logger.error("No config file found. Please see README.md")
-    sys.exit()
+    config_map = config.create_config_map(Directory)
+    logger.info(f'config_map={config_map}')
 
-for path, json in config_map.items():
-    logger.info(f'Watching: {path}/{json["pattern"]}')
+    if len(config_map) == 0:
+        raise Exception("No config file found. Please see README.md")
 
-w = watcher.NamazuWatcher(Directory, config_map, sample_handler)
-w.start()
+    for path, json in config_map.items():
+        logger.info(f'Watching: {path}/{json["pattern"]}')
 
-sweep_interval = int(args.archive_interval)
-schedule.every(sweep_interval).seconds.do(lambda: sweeper.sweep(config_map))
+    _watcher = watcher.NamazuWatcher(Directory, config_map, sample_handler, on_config_updated_handler)
+    schedule.every(sweep_interval).seconds.do(lambda: sweeper.sweep(config_map))
 
-logger.info(f"Observe started '{Directory}'")
-logger.info("Press 'Ctrl-c' to exit")
+    return (_watcher, schedule)
+
+
 try:
+    w, s = (None, None)
     while True:
+        if initialize_required:
+
+            try:
+                _w, _s = initialize(Directory, sample_handler, on_config_updated_handler, int(args.archive_interval))
+
+                if w is not None and s is not None:
+                    w.stop()
+                    s.clear()
+
+                w, s = _w, _s
+
+                w.start()
+                logger.info(f"Observe started '{Directory}'")
+                logger.info("Press 'Ctrl-c' to exit")
+
+            except Exception as e:
+                logger.error(e, exc_info=e)
+                logger.error("Error in initialize. Configuration is not applied.")
+
+                if w is None:
+                    logger.error("Failed to initialize. exitting...")
+                    sys.exit()
+
+            finally:
+                initialize_required = False
+
         w.wait(1)
-        schedule.run_pending()
+        s.run_pending()
+
 except KeyboardInterrupt:
+    logger.info("Interrupted. shutting down...")
     w.stop()
