@@ -73,19 +73,3 @@ class TestReload:
         o.event_handler.assert_called_once_with(ANY)
         ev, = o.event_handler.call_args.args
         assert ev.src_path == "/".join([ct.ROOT_DIR, "sub", "sample01.csv"])
-
-
-class TestCheckAllFilesOnStart:
-    def test_inject_on_start(self):
-        ct.place_config_file("", {"pattern": "*.csv"})
-        ct.place_file("", "sample.csv", "hello,world")
-
-        o = ONamazu(ct.ROOT_DIR, 60)
-        o.event_handler = MagicMock(name="event_handler")
-
-        o.click()
-        o.stop()
-
-        o.event_handler.assert_called_once_with(ANY)
-        ev, = o.event_handler.call_args.args
-        assert ev.src_path == "/".join([ct.ROOT_DIR, "sample.csv"])
