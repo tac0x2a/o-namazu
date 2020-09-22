@@ -165,3 +165,21 @@ def test_create_db_file_when_receive_file_event():
     db = ct.read_db_file(ct.ROOT_DIR)
     keys = db["watching"].keys()
     assert "sample-file.csv" in keys
+
+
+class TestCheckAllFiles:
+    def test_inject_on_start(self):
+        ct.place_config_file("", {"pattern": "*.csv"})
+        conf = config.create_config_map(ct.ROOT_DIR)
+        ct.place_file("", "sample.csv", "hello,world")
+
+        events = []
+        w = watcher.NamazuWatcher(ct.ROOT_DIR, conf, lambda ev: events.append(ev))
+        w.start()
+        w.wait(1)
+        w.stop()
+
+        assert 1 == len(events)
+
+        ev = events[0]
+        assert ev.src_path == "/".join([ct.ROOT_DIR, "sample.csv"])
