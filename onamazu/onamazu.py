@@ -22,7 +22,7 @@ class ONamazu:
         self.logger.info(f'config_map={config_map}')
 
         if len(config_map) == 0:
-            raise Exception("No config file found. Please see README.md")
+            self.logger.warning(f"No config files ({config.ConfigFileName}) are found. Please see README.md")
 
         return config_map
 

@@ -8,6 +8,15 @@ from onamazu.onamazu import ONamazu
 from onamazu.watcher import NamazuEvent
 
 
+def test_return_empty_when_no_config_file():
+    o = ONamazu(ct.ROOT_DIR, 60)
+    o.event_handler = MagicMock(name="event_handler")
+    o.click()
+    o.stop()
+
+    o.event_handler.assert_not_called()
+
+
 class TestReload:
     def test_reload_on_create(self):
         ct.place_config_file("", {"pattern": "*.csv"})
